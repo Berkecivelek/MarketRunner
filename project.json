@@ -1,0 +1,40 @@
+{
+  "name": "market-runner",
+  "projectType": "application",
+  "root": "apps/market-runner",
+  "sourceRoot": "apps/market-runner",
+  "targets": {
+    "start": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm --filter @bdate/market-runner start"
+      }
+    },
+    "ios": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm --filter @bdate/market-runner ios"
+      }
+    },
+    "android": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm --filter @bdate/market-runner android"
+      }
+    },
+    "web": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm --filter @bdate/market-runner web"
+      }
+    },
+    "lint": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm --filter @bdate/market-runner lint"
+      }
+    }
+  },
+  "tags": ["scope:mobile", "type:app"]
+}
+
