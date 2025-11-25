@@ -3,11 +3,14 @@ import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-nati
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
+import { COLORS } from '../theme/colors';
 import { SHELVES, buildOrderKey } from '../data/products';
 import { getLevelById } from '../data/levels';
 import { OrderList } from '../components/OrderList';
 import { CartBar } from '../components/CartBar';
 import { ShelfView } from '../components/ShelfView';
+import { SceneView } from '../components/SceneView';
+import { CloudTransition } from '../components/CloudTransition';
 import { Timer } from '../components/Timer';
 import { useGame } from '../state/GameContext';
 import type { RootStackParamList } from '../navigation';
@@ -33,7 +36,7 @@ const buildRequiredMap = (items: OrderItem[]) => {
 export const GamePlayScreen: React.FC<Props> = ({ navigation, route }) => {
   const { levelId } = route.params;
   const level = getLevelById(levelId);
-  const { completeLevel } = useGame();
+  const { completeLevel, gameMode } = useGame();
 
   const requiredMap = useMemo(() => (level ? buildRequiredMap(level.orderItems) : {}), [level]);
   const totalRequired = useMemo(() => {
@@ -50,6 +53,10 @@ export const GamePlayScreen: React.FC<Props> = ({ navigation, route }) => {
   const [timeLeft, setTimeLeft] = useState(level?.timeLimit ?? 0);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [phase, setPhase] = useState<'overview' | 'collect'>('overview');
+  const [showScene, setShowScene] = useState(false);
+  const [isTransitioningScene, setIsTransitioningScene] = useState(false);
+  const [selectedShelfId, setSelectedShelfId] = useState<string | null>(null);
+
   const shelvesToShow = useMemo(() => SHELVES, []);
   const defaultShelfIndex = useMemo(() => {
     if (requiredKeys.size === 0) {
@@ -179,9 +186,28 @@ export const GamePlayScreen: React.FC<Props> = ({ navigation, route }) => {
 
   const handleStartCollect = useCallback(() => {
     if (!level) return;
-    setPhase('collect');
-    setFeedback({ message: 'Raflardan ürünleri topla!', tone: 'success' });
+    setIsTransitioningScene(true); // Start cloud animation
   }, [level]);
+
+  const onTransitionEnd = useCallback(() => {
+    setIsTransitioningScene(false);
+    setPhase('collect');
+    setShowScene(true);
+    setFeedback({ message: 'Markette gezip ürünleri bul!', tone: 'success' });
+  }, []);
+
+  const handleShelfInteract = useCallback((shelfId: string) => {
+    // Find shelf index
+    const index = shelvesToShow.findIndex(s => s.id === shelfId);
+    if (index >= 0) {
+      setActiveShelfIndex(index);
+      setSelectedShelfId(shelfId); // Open shelf modal
+    }
+  }, [shelvesToShow]);
+
+  const handleCloseShelf = () => {
+    setSelectedShelfId(null);
+  };
 
   const handleOrderListPress = useCallback((item: OrderItem) => {
     if (!level) return;
@@ -284,11 +310,68 @@ export const GamePlayScreen: React.FC<Props> = ({ navigation, route }) => {
     );
   }
 
+  const getBackgroundColor = () => {
+    switch (gameMode) {
+      case 'MARKET': return COLORS.market;
+      case 'SUPERMARKET': return COLORS.supermarket;
+      default: return COLORS.bakkal;
+    }
+  };
+
+  if (showScene && !selectedShelfId) {
+    return (
+      <View style={{ flex: 1, backgroundColor: '#000' }}>
+        <SceneView 
+          shelves={shelvesToShow} 
+          onInteract={handleShelfInteract} 
+          onProductSelect={(pId, bId) => handleSelect(buildOrderKey(pId, bId))}
+          gameMode={gameMode ?? 'BAKKAL'} 
+        />
+        
+        <SafeAreaView style={styles.sceneOverlay} pointerEvents="box-none">
+           <View style={styles.topBar}>
+             <TouchableOpacity onPress={() => setShowScene(false)}>
+               <Text style={styles.backText}>← Liste</Text>
+             </TouchableOpacity>
+             <View style={styles.orderSummary}>
+                <Text style={styles.topTitle}>Level {level.levelId}</Text>
+             </View>
+             {level.timeLimit ? (
+               <Timer 
+                 initialSeconds={level.timeLimit} 
+                 isRunning={!isTransitioning && !allCollected} 
+                 onExpire={handleTimeExpired} 
+               />
+             ) : null}
+           </View>
+
+           <View style={{ flex: 1 }} pointerEvents="none" />
+
+           <View style={styles.footer}>
+             <CartBar
+               orderItems={level.orderItems}
+               collectedMap={collectedMap}
+               totalCollected={collectedTotals}
+               totalRequired={totalRequired}
+             />
+             <TouchableOpacity
+                style={styles.primaryButton}
+                onPress={handleCompleteOrder}
+              >
+                <Text style={styles.primaryButtonText}>Kasa / Tamamla</Text>
+              </TouchableOpacity>
+           </View>
+        </SafeAreaView>
+      </View>
+    );
+  }
+
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: getBackgroundColor() }]}>
+      <CloudTransition visible={isTransitioningScene} onTransitionEnd={onTransitionEnd} />
       <View style={styles.topBar}>
-        <TouchableOpacity onPress={() => navigation.navigate('LevelSelect')}>
-          <Text style={styles.backText}>← Çıkış</Text>
+        <TouchableOpacity onPress={() => phase === 'collect' ? handleCloseShelf() : navigation.navigate('LevelSelect')}>
+          <Text style={styles.backText}>{phase === 'collect' ? '← Reyonlar' : '← Çıkış'}</Text>
         </TouchableOpacity>
         <View style={styles.orderSummary}>
           <Text style={styles.topTitle}>Level {level.levelId}</Text>
@@ -302,7 +385,6 @@ export const GamePlayScreen: React.FC<Props> = ({ navigation, route }) => {
             initialSeconds={level.timeLimit}
             isRunning={phase === 'collect' && !isTransitioning && !allCollected}
             onExpire={handleTimeExpired}
-            onTick={(value) => setTimeLeft(value)}
           />
         ) : (
           <View style={styles.noTimerBadge}>
@@ -435,10 +517,10 @@ const styles = StyleSheet.create({
   orderListWrapper: {
     paddingHorizontal: 16,
     paddingBottom: 12,
-    flexShrink: 0
+    flexShrink: 1
   },
   orderListScroll: {
-    maxHeight: 180
+    maxHeight: 150
   },
   instructionsBox: {
     marginTop: 10,
@@ -497,8 +579,8 @@ const styles = StyleSheet.create({
     color: '#F8FAFC'
   },
   shelfContent: {
-    flex: 1,
-    minHeight: 260
+    flex: 1
+    // Removed minHeight to prevent overflow on small screens
   },
   overlay: {
     position: 'absolute',
@@ -571,6 +653,10 @@ const styles = StyleSheet.create({
   errorLink: {
     fontSize: 14,
     color: '#60A5FA'
+  },
+  sceneOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: 'space-between'
   }
 });
 

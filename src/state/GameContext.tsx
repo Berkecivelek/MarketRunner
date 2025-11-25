@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+import type { GameMode } from '../types/common';
+
 interface GameState {
   coins: number;
   xp: number;
@@ -8,6 +10,7 @@ interface GameState {
   unlockedLevels: number[];
   completedLevels: number[];
   activeLevelId?: number | null;
+  gameMode?: GameMode;
   isLoading?: boolean;
 }
 
@@ -53,6 +56,7 @@ const INITIAL_STATE: GameState = {
   unlockedLevels: [1],
   completedLevels: [],
   activeLevelId: null,
+  gameMode: undefined,
   isLoading: true
 };
 
@@ -96,16 +100,25 @@ export const GameProvider: React.FC<React.PropsWithChildren> = ({ children }) =>
   }, [state]);
 
   const startLevel = (levelId: number) => {
+    let gameMode: GameMode = 'BAKKAL';
+    if (levelId > 20 && levelId <= 40) {
+      gameMode = 'MARKET';
+    } else if (levelId > 40) {
+      gameMode = 'SUPERMARKET';
+    }
+
     setState((prev) => ({
       ...prev,
-      activeLevelId: levelId
+      activeLevelId: levelId,
+      gameMode
     }));
   };
 
   const resetActiveLevel = () => {
     setState((prev) => ({
       ...prev,
-      activeLevelId: null
+      activeLevelId: null,
+      gameMode: undefined
     }));
   };
 

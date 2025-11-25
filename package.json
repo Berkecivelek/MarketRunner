@@ -15,6 +15,8 @@
     "@react-navigation/native": "^6.1.18",
     "@react-navigation/native-stack": "^6.10.1",
     "expo": "54.0.25",
+    "expo-av": "~16.0.7",
+    "expo-screen-orientation": "~9.0.7",
     "expo-status-bar": "~3.0.8",
     "react": "19.1.0",
     "react-native": "0.81.5",

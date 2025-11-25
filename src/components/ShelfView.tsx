@@ -1,9 +1,11 @@
 import React from 'react';
-import { FlatList, StyleSheet, Text, View } from 'react-native';
-
+import { FlatList, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View, Dimensions } from 'react-native';
+import { COLORS } from '../theme/colors';
+import { ShelfProductCard } from './ProductCard';
 import type { ShelfDefinition } from '../data/products';
 import { buildOrderKey } from '../data/products';
-import { ShelfProductCard } from './ProductCard';
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 interface ShelfViewProps {
   shelf: ShelfDefinition;
@@ -17,7 +19,6 @@ interface ShelfViewProps {
   interactionDisabled?: boolean;
 }
 
-// Raf içeriğini grid formatında gösteriyoruz. Basit placeholder kartlar yeterli.
 export const ShelfView: React.FC<ShelfViewProps> = ({
   shelf,
   requiredMap,
@@ -32,17 +33,28 @@ export const ShelfView: React.FC<ShelfViewProps> = ({
   return (
     <View style={styles.container}>
       {showTitle ? <Text style={styles.title}>{shelf.title}</Text> : null}
-      <FlatList
-        data={shelf.variants}
-        keyExtractor={(item) => buildOrderKey(item.productId, item.brandId)}
-        renderItem={({ item }) => {
+      
+      {/* Raf Görünümü: Ahşap raf efekti */}
+      <View style={styles.shelfBackground}>
+        <View style={styles.shelfPlank} />
+        <View style={styles.shelfPlank} />
+        <View style={styles.shelfPlank} />
+      </View>
+
+      <ScrollView 
+        horizontal 
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.productsContainer}
+      >
+        {shelf.variants.map((item) => {
           const key = buildOrderKey(item.productId, item.brandId);
           const required = requiredMap[key] ?? 0;
           const collected = collectedMap[key] ?? 0;
           const disabled = disabledKeys?.has(key) ?? false;
           const highlight = highlightKeys?.has(key) ?? false;
+
           return (
-            <View style={styles.item}>
+            <View key={key} style={styles.productWrapper}>
               <ShelfProductCard
                 variant={item}
                 requiredCount={required}
@@ -54,48 +66,62 @@ export const ShelfView: React.FC<ShelfViewProps> = ({
                 onPress={
                   interactionDisabled
                     ? undefined
-                    : () => {
-                        onSelect(key);
-                      }
+                    : () => onSelect(key)
                 }
               />
             </View>
           );
-        }}
-        numColumns={3}
-        columnWrapperStyle={styles.columnWrapper}
-        contentContainerStyle={styles.listContent}
-        showsVerticalScrollIndicator={false}
-      />
+        })}
+      </ScrollView>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
     width: '100%',
-    paddingHorizontal: 16,
-    paddingBottom: 24,
-    flex: 1
+    justifyContent: 'center', // Dikey ortala
+    paddingVertical: 20,
   },
   title: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#F8FAFC',
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: COLORS.text,
+    marginLeft: 20,
     marginBottom: 10,
-    textAlign: 'left'
+    textShadowColor: 'rgba(0,0,0,0.1)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
   },
-  listContent: {
-    paddingBottom: 32,
-    gap: 10
+  shelfBackground: {
+    position: 'absolute',
+    top: 60, // Başlığın altı
+    left: 0,
+    right: 0,
+    bottom: 20,
+    justifyContent: 'space-around',
+    zIndex: -1,
+    opacity: 0.8
   },
-  columnWrapper: {
-    gap: 10,
-    justifyContent: 'space-between'
+  shelfPlank: {
+    height: 12,
+    backgroundColor: '#8D6E63', // Ahşap rengi
+    width: '100%',
+    borderRadius: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
   },
-  item: {
-    flex: 1,
-    minWidth: 0
+  productsContainer: {
+    paddingHorizontal: 20,
+    alignItems: 'center', // Ürünleri raf hizasında tut
+    gap: 15
+  },
+  productWrapper: {
+    width: 100,
+    height: 140,
+    justifyContent: 'flex-end', // Ürünü rafa oturt
   }
 });
-

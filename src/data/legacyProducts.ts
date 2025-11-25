@@ -1,3 +1,4 @@
+import type { GameMode } from '../types/common';
 import type { ProductDefinition, ProductVariant } from '../types/product';
 
 export const buildOrderKey = (productId: string, brandId?: string) =>
@@ -322,5 +323,97 @@ export const getProductName = (productId: string, brandId?: string) => {
   }
   const product = PRODUCT_MAP[productId];
   return product ? product.name : productId;
+};
+
+export const getVariantsForMode = (mode: GameMode): ProductVariant[] => {
+  return PRODUCT_DEFINITIONS.flatMap((product) => {
+    // BAKKAL: Sadece 1 tane (Markasız/Varsayılan)
+    if (mode === 'BAKKAL') {
+      return [{
+        productId: product.id,
+        displayName: product.name,
+        color: product.baseColor,
+        icon: product.icon,
+        shelfTitle: product.shelfTitle
+      }];
+    }
+
+    // MARKET: Varsayılan + Maksimum 2 Marka
+    // Markaları listele, yoksa default dön.
+    // Market modunda "default" yerine markalı ürünleri tercih edelim ki çeşitlilik olsun.
+    if (mode === 'MARKET') {
+      const brands = (product.brands || []).slice(0, 2);
+      if (brands.length === 0) {
+         return [{
+          productId: product.id,
+          displayName: product.name,
+          color: product.baseColor,
+          icon: product.icon,
+          shelfTitle: product.shelfTitle
+        }];
+      }
+      return brands.map(brand => ({
+        productId: product.id,
+        brandId: brand.id,
+        displayName: brand.name,
+        color: brand.accentColor,
+        icon: product.icon,
+        shelfTitle: product.shelfTitle,
+        badgeText: brand.shortCode
+      }));
+    }
+
+    // SUPERMARKET: Tüm Markalar
+    if (product.brands && product.brands.length > 0) {
+      return product.brands.map(brand => ({
+        productId: product.id,
+        brandId: brand.id,
+        displayName: brand.name,
+        color: brand.accentColor,
+        icon: product.icon,
+        shelfTitle: product.shelfTitle,
+        badgeText: brand.shortCode
+      }));
+    }
+    
+    // Markası yoksa varsayılan
+    return [{
+      productId: product.id,
+      displayName: product.name,
+      color: product.baseColor,
+      icon: product.icon,
+      shelfTitle: product.shelfTitle
+    }];
+  });
+};
+
+export const getShelvesForMode = (mode: GameMode): ShelfDefinition[] => {
+  const variants = getVariantsForMode(mode);
+  
+  return categoryOrder.map((category) => {
+    const definitions = PRODUCT_DEFINITIONS.filter((product) => product.category === category);
+    // Bu shelf için uygun variantları bul (productId eşleşmesi üzerinden)
+    const variantsForShelf = variants.filter((variant) =>
+      definitions.some((product) => product.id === variant.productId)
+    );
+
+    const title =
+      definitions[0]?.shelfTitle ??
+      ({
+        produce: 'Meyve & Sebze',
+        dairy: 'Süt Ürünleri',
+        electronics: 'Elektronik',
+        pantry: 'Temel Gıda',
+        butcher: 'Et & Tavuk',
+        beverage: 'Su & İçecek'
+      }[category] ?? 'Raf');
+
+    return {
+      id: category,
+      title,
+      category,
+      variants: variantsForShelf
+    };
+  });
 };
 
