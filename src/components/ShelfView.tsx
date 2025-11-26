@@ -17,6 +17,7 @@ interface ShelfViewProps {
   wrongSelectionKey?: string | null;
   showTitle?: boolean;
   interactionDisabled?: boolean;
+  hidePlanks?: boolean; // Yeni prop
 }
 
 export const ShelfView: React.FC<ShelfViewProps> = ({
@@ -28,18 +29,21 @@ export const ShelfView: React.FC<ShelfViewProps> = ({
   highlightKeys,
   wrongSelectionKey,
   showTitle = true,
-  interactionDisabled = false
+  interactionDisabled = false,
+  hidePlanks = false
 }) => {
   return (
     <View style={styles.container}>
       {showTitle ? <Text style={styles.title}>{shelf.title}</Text> : null}
       
-      {/* Raf Görünümü: Ahşap raf efekti */}
-      <View style={styles.shelfBackground}>
-        <View style={styles.shelfPlank} />
-        <View style={styles.shelfPlank} />
-        <View style={styles.shelfPlank} />
-      </View>
+      {/* Raf Görünümü: Ahşap raf efekti - hidePlanks true ise gizle */}
+      {!hidePlanks && (
+        <View style={styles.shelfBackground}>
+          <View style={styles.shelfPlank} />
+          <View style={styles.shelfPlank} />
+          <View style={styles.shelfPlank} />
+        </View>
+      )}
 
       <ScrollView 
         horizontal 

@@ -311,11 +311,15 @@ export const GamePlayScreen: React.FC<Props> = ({ navigation, route }) => {
   }
 
   const getBackgroundColor = () => {
+    // Kullanıcı isteği üzerine sabit koyu tema
+    return '#020617'; 
+    /* 
     switch (gameMode) {
       case 'MARKET': return COLORS.market;
       case 'SUPERMARKET': return COLORS.supermarket;
       default: return COLORS.bakkal;
     }
+    */
   };
 
   if (showScene && !selectedShelfId) {
@@ -326,41 +330,41 @@ export const GamePlayScreen: React.FC<Props> = ({ navigation, route }) => {
           onInteract={handleShelfInteract} 
           onProductSelect={(pId, bId) => handleSelect(buildOrderKey(pId, bId))}
           gameMode={gameMode ?? 'BAKKAL'} 
+          onBack={() => setShowScene(false)}
+          orderItems={level.orderItems}
+          collectedMap={collectedMap}
         />
         
         <SafeAreaView style={styles.sceneOverlay} pointerEvents="box-none">
-           <View style={styles.topBar}>
-             <TouchableOpacity onPress={() => setShowScene(false)}>
-               <Text style={styles.backText}>← Liste</Text>
-             </TouchableOpacity>
-             <View style={styles.orderSummary}>
-                <Text style={styles.topTitle}>Level {level.levelId}</Text>
+           {/* Top Bar Minimal */}
+           <View style={styles.sceneTopBar}>
+             
+             <View style={styles.miniTimerContainer}>
+                {level.timeLimit ? (
+                  <Timer 
+                    initialSeconds={level.timeLimit} 
+                    isRunning={!isTransitioning && !allCollected} 
+                    onExpire={handleTimeExpired} 
+                  />
+                ) : null}
              </View>
-             {level.timeLimit ? (
-               <Timer 
-                 initialSeconds={level.timeLimit} 
-                 isRunning={!isTransitioning && !allCollected} 
-                 onExpire={handleTimeExpired} 
-               />
-             ) : null}
+
+             <View style={styles.miniCartContainer}>
+                <Text style={styles.miniCartText}>🛒 {collectedTotals}/{totalRequired}</Text>
+             </View>
            </View>
 
-           <View style={{ flex: 1 }} pointerEvents="none" />
-
-           <View style={styles.footer}>
-             <CartBar
-               orderItems={level.orderItems}
-               collectedMap={collectedMap}
-               totalCollected={collectedTotals}
-               totalRequired={totalRequired}
-             />
-             <TouchableOpacity
-                style={styles.primaryButton}
-                onPress={handleCompleteOrder}
-              >
-                <Text style={styles.primaryButtonText}>Kasa / Tamamla</Text>
-              </TouchableOpacity>
-           </View>
+           {/* Bottom Action - Complete Order Button (Only if collected enough) */}
+           {allCollected && (
+               <View style={styles.sceneBottomAction}>
+                    <TouchableOpacity
+                        style={styles.completeButtonScene}
+                        onPress={handleCompleteOrder}
+                    >
+                        <Text style={styles.primaryButtonText}>Tamamla ✅</Text>
+                    </TouchableOpacity>
+               </View>
+           )}
         </SafeAreaView>
       </View>
     );
@@ -370,7 +374,7 @@ export const GamePlayScreen: React.FC<Props> = ({ navigation, route }) => {
     <SafeAreaView style={[styles.container, { backgroundColor: getBackgroundColor() }]}>
       <CloudTransition visible={isTransitioningScene} onTransitionEnd={onTransitionEnd} />
       <View style={styles.topBar}>
-        <TouchableOpacity onPress={() => phase === 'collect' ? handleCloseShelf() : navigation.navigate('LevelSelect')}>
+        <TouchableOpacity onPress={() => phase === 'collect' ? setShowScene(true) : navigation.navigate('LevelSelect')}>
           <Text style={styles.backText}>{phase === 'collect' ? '← Reyonlar' : '← Çıkış'}</Text>
         </TouchableOpacity>
         <View style={styles.orderSummary}>
@@ -431,6 +435,7 @@ export const GamePlayScreen: React.FC<Props> = ({ navigation, route }) => {
             wrongSelectionKey={wrongKey}
             showTitle={false}
             interactionDisabled={phase !== 'collect' || isTransitioning}
+            hidePlanks={phase !== 'collect'} // Rafları gizle, sadece ürünler kalsın
           />
           {phase !== 'collect' ? (
             <TouchableOpacity style={styles.overlay} onPress={handleStartCollect}>
@@ -520,24 +525,24 @@ const styles = StyleSheet.create({
     flexShrink: 1
   },
   orderListScroll: {
-    maxHeight: 150
+    maxHeight: 240 // Arttırıldı
   },
   instructionsBox: {
-    marginTop: 10,
+    marginTop: 8,
     backgroundColor: '#0B1220',
-    borderRadius: 14,
-    padding: 12,
-    gap: 4,
+    borderRadius: 10,
+    padding: 8,
+    gap: 2,
     borderWidth: 1,
     borderColor: '#1E293B'
   },
   instructionsTitle: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '700',
     color: '#93C5FD'
   },
   instructionsText: {
-    fontSize: 11,
+    fontSize: 10,
     color: '#CBD5F5'
   },
   shelfSection: {
@@ -580,7 +585,6 @@ const styles = StyleSheet.create({
   },
   shelfContent: {
     flex: 1
-    // Removed minHeight to prevent overflow on small screens
   },
   overlay: {
     position: 'absolute',
@@ -589,7 +593,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     borderRadius: 14,
-    backgroundColor: 'rgba(2, 6, 23, 0.75)',
+    backgroundColor: 'rgba(0, 0, 0, 0.3)', // Daha şeffaf
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 24,
@@ -625,10 +629,10 @@ const styles = StyleSheet.create({
     fontWeight: '600'
   },
   primaryButton: {
-    marginTop: 12,
+    marginTop: 8, // Azaltıldı
     backgroundColor: '#1E3A8A',
     borderRadius: 18,
-    paddingVertical: 14,
+    paddingVertical: 10, // Azaltıldı
     alignItems: 'center'
   },
   primaryButtonText: {
@@ -657,7 +661,44 @@ const styles = StyleSheet.create({
   sceneOverlay: {
     ...StyleSheet.absoluteFillObject,
     justifyContent: 'space-between'
+  },
+  sceneTopBar: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 10,
+    paddingTop: 20
+  },
+  backButtonCircle: {
+    width: 40, height: 40, borderRadius: 20,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    alignItems: 'center', justifyContent: 'center'
+  },
+  miniTimerContainer: {
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    paddingHorizontal: 10, paddingVertical: 5,
+    borderRadius: 15
+  },
+  miniCartContainer: {
+    backgroundColor: 'rgba(30, 58, 138, 0.8)',
+    paddingHorizontal: 12, paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1, borderColor: '#60A5FA'
+  },
+  miniCartText: {
+    color: '#FFF', fontWeight: 'bold', fontSize: 14
+  },
+  sceneBottomAction: {
+    alignItems: 'flex-end',
+    padding: 20,
+    paddingBottom: 40
+  },
+  completeButtonScene: {
+    backgroundColor: '#22C55E',
+    paddingHorizontal: 24, paddingVertical: 12,
+    borderRadius: 25,
+    shadowColor: '#000', shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3, shadowRadius: 4,
+    elevation: 5
   }
 });
-
-
