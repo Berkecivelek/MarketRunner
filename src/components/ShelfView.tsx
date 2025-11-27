@@ -17,7 +17,7 @@ interface ShelfViewProps {
   wrongSelectionKey?: string | null;
   showTitle?: boolean;
   interactionDisabled?: boolean;
-  hidePlanks?: boolean; // Yeni prop
+  hidePlanks?: boolean; // Bu artık kullanılmayacak ama backward compatibility için tutuyoruz
 }
 
 export const ShelfView: React.FC<ShelfViewProps> = ({
@@ -36,14 +36,7 @@ export const ShelfView: React.FC<ShelfViewProps> = ({
     <View style={styles.container}>
       {showTitle ? <Text style={styles.title}>{shelf.title}</Text> : null}
       
-      {/* Raf Görünümü: Ahşap raf efekti - hidePlanks true ise gizle */}
-      {!hidePlanks && (
-        <View style={styles.shelfBackground}>
-          <View style={styles.shelfPlank} />
-          <View style={styles.shelfPlank} />
-          <View style={styles.shelfPlank} />
-        </View>
-      )}
+      {/* Raf arka planı (çizgiler) tamamen kaldırıldı. */}
 
       <ScrollView 
         horizontal 
@@ -98,26 +91,7 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 2,
   },
-  shelfBackground: {
-    position: 'absolute',
-    top: 60, // Başlığın altı
-    left: 0,
-    right: 0,
-    bottom: 20,
-    justifyContent: 'space-around',
-    zIndex: -1,
-    opacity: 0.8
-  },
-  shelfPlank: {
-    height: 12,
-    backgroundColor: '#8D6E63', // Ahşap rengi
-    width: '100%',
-    borderRadius: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 2,
-  },
+  // shelfBackground ve shelfPlank stilleri kaldırıldı.
   productsContainer: {
     paddingHorizontal: 20,
     alignItems: 'center', // Ürünleri raf hizasında tut
