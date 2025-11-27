@@ -53,6 +53,10 @@ export const LevelResultScreen: React.FC<Props> = ({ route, navigation }) => {
   const handleLevelSelect = () => {
     navigation.navigate('LevelSelect');
   };
+  
+  const handleMainMenu = () => {
+    navigation.navigate('MainMenu');
+  };
 
   return (
     <View style={styles.container}>
@@ -121,6 +125,10 @@ export const LevelResultScreen: React.FC<Props> = ({ route, navigation }) => {
             </TouchableOpacity>
           )}
         </View>
+
+        <TouchableOpacity style={styles.exitButton} onPress={handleMainMenu}>
+           <Text style={styles.exitButtonText}>Çıkış</Text>
+        </TouchableOpacity>
 
       </View>
     </View>
@@ -221,5 +229,19 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
     color: '#0B1120'
+  },
+  exitButton: {
+    marginTop: 6,
+    paddingVertical: 14,
+    alignItems: 'center',
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: 'rgba(239, 68, 68, 0.3)',
+    backgroundColor: 'rgba(239, 68, 68, 0.1)'
+  },
+  exitButtonText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#EF4444'
   }
 });

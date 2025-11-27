@@ -176,20 +176,22 @@ export const SceneView: React.FC<SceneViewProps> = ({ shelves, onProductSelect, 
              {showOrderList && (
                  <View style={styles.orderListOverlay}>
                      <Text style={styles.orderTitle}>Alışveriş Listesi</Text>
-                     {orderItems.map((item, idx) => {
-                         const key = `${item.productId}__${item.brandId || 'default'}`;
-                         const collected = collectedMap[key] || 0;
-                         const isDone = collected >= item.quantity;
-                         return (
-                             <View key={idx} style={[styles.orderItem, isDone && styles.orderItemDone]}>
-                                 <View style={{marginRight: 5}}>
-                                    <CartoonProduct id={item.productId} scale={0.4} />
+                     <Animated.ScrollView style={{ maxHeight: 200 }} nestedScrollEnabled>
+                         {orderItems.map((item, idx) => {
+                             const key = `${item.productId}__${item.brandId || 'default'}`;
+                             const collected = collectedMap[key] || 0;
+                             const isDone = collected >= item.quantity;
+                             return (
+                                 <View key={idx} style={[styles.orderItem, isDone && styles.orderItemDone]}>
+                                     <View style={{marginRight: 5}}>
+                                        <CartoonProduct id={item.productId} scale={0.4} />
+                                     </View>
+                                     <Text style={[styles.orderText, isDone && styles.textDone]}>{collected}/{item.quantity}</Text>
+                                     {isDone && <Text>✅</Text>}
                                  </View>
-                                 <Text style={[styles.orderText, isDone && styles.textDone]}>{collected}/{item.quantity}</Text>
-                                 {isDone && <Text>✅</Text>}
-                             </View>
-                         );
-                     })}
+                             );
+                         })}
+                     </Animated.ScrollView>
                  </View>
              )}
         </View>
