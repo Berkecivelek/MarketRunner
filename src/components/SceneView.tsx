@@ -1,6 +1,7 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { StyleSheet, View, Text, TouchableOpacity, Dimensions, Animated, PanResponder, Easing } from 'react-native';
 import * as ScreenOrientation from 'expo-screen-orientation';
+import { useFocusEffect } from '@react-navigation/native';
 import type { ShelfDefinition } from '../data/products';
 import { CartoonProduct } from './CartoonProduct';
 import { useNavigation } from '@react-navigation/native';
@@ -84,19 +85,25 @@ export const SceneView: React.FC<SceneViewProps> = ({ shelves, onProductSelect, 
   const confettiAnim = useRef(new Animated.Value(0)).current;
   const [victoryMode, setVictoryMode] = useState(false);
 
-  useEffect(() => {
-    const lockLandscape = async () => {
-        await ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE);
-        setOrientationLocked(true);
-    };
-    lockLandscape();
-    soundManager.playMusic('market_theme');
+  // Use useFocusEffect to ensure landscape mode is active whenever this screen is focused
+  useFocusEffect(
+    useCallback(() => {
+      const lockLandscape = async () => {
+          await ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE);
+          setOrientationLocked(true);
+      };
+      lockLandscape();
+      soundManager.playMusic('market_theme');
 
-    return () => {
-        ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
-        soundManager.stopMusic();
-    };
-  }, []);
+      // Cleanup function runs when the component unmounts or loses focus
+      return () => {
+          // Lock back to portrait only if we are actually leaving the SceneView
+          // However, to be safe and consistent with user request, we default to Portrait elsewhere.
+          ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
+          soundManager.stopMusic();
+      };
+    }, [])
+  );
 
   useEffect(() => {
       if (walking) {
@@ -161,7 +168,7 @@ export const SceneView: React.FC<SceneViewProps> = ({ shelves, onProductSelect, 
 
       if (isNeeded) {
           // CORRECT
-          soundManager.playSfx('correct'); // 'Yeyy!' logic inside SoundManager
+          soundManager.playSfx('correct'); 
           // Jump Animation
           Animated.sequence([
               Animated.timing(charJump, { toValue: -15, duration: 150, easing: Easing.ease, useNativeDriver: true }),
@@ -169,7 +176,7 @@ export const SceneView: React.FC<SceneViewProps> = ({ shelves, onProductSelect, 
           ]).start();
       } else {
           // WRONG
-          soundManager.playSfx('wrong'); // 'Uh!' logic inside SoundManager
+          soundManager.playSfx('wrong'); 
           // Shake Head Animation
           Animated.sequence([
               Animated.timing(charHeadShake, { toValue: 10, duration: 50, useNativeDriver: true }),
