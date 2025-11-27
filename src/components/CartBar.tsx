@@ -1,10 +1,10 @@
 import React, { useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
-import { productImages } from '../assets/productImages';
 import { PRODUCTS, buildOrderKey, getProductName } from '../data/products';
 import type { OrderItem } from '../types/level';
 import type { ProductId } from '../data/products';
+import { CartoonProduct } from './CartoonProduct';
 
 interface CartBarProps {
   orderItems: OrderItem[];
@@ -33,15 +33,12 @@ export const CartBar: React.FC<CartBarProps> = ({
         const legacyName = getProductName(item.productId, item.brandId);
         const product = isKnown ? PRODUCTS[mappedId] : undefined;
         
-        // Try mapped ID first, then raw ID
-        const visuals = (isKnown ? productImages[mappedId] : undefined) ?? productImages[item.productId];
-
         return {
           key,
           required: item.quantity,
           collected,
           name: legacyName !== item.productId ? legacyName : (product?.name ?? item.productId),
-          emoji: visuals?.emojiFallback ?? '🛒'
+          productId: item.productId // Pass productId for CartoonProduct
         };
       }),
     [orderItems, collectedMap]
@@ -58,7 +55,9 @@ export const CartBar: React.FC<CartBarProps> = ({
       <View style={styles.itemRow}>
         {entries.map((entry) => (
           <View key={entry.key} style={styles.itemChip}>
-            <Text style={styles.itemEmoji}>{entry.emoji}</Text>
+            <View style={styles.iconWrapper}>
+               <CartoonProduct id={entry.productId} scale={0.4} />
+            </View>
             <Text style={styles.itemName} numberOfLines={1}>
               {entry.name}
             </Text>
@@ -111,8 +110,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 5
   },
-  itemEmoji: {
-    fontSize: 14
+  iconWrapper: {
+    marginRight: -10, // Scale küçültüldüğü için boşluğu ayarla
+    marginLeft: -5
   },
   itemName: {
     maxWidth: 100,
@@ -131,4 +131,3 @@ const styles = StyleSheet.create({
     color: '#BFDBFE'
   }
 });
-

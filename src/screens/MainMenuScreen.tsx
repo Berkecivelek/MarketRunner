@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { useFocusEffect } from '@react-navigation/native';
+import * as ScreenOrientation from 'expo-screen-orientation';
 
 import { XPBar } from '../components/XPBar';
 import { useGame } from '../state/GameContext';
@@ -19,6 +21,15 @@ const MENU_BUTTONS = [
 export const MainMenuScreen: React.FC<Props> = ({ navigation }) => {
   const insets = useSafeAreaInsets();
   const { coins, xp, marketLevel } = useGame();
+
+  useFocusEffect(
+    useCallback(() => {
+      const lockPortrait = async () => {
+        await ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
+      };
+      lockPortrait();
+    }, [])
+  );
 
   return (
     <View style={[styles.container, { paddingTop: insets.top + 32, paddingBottom: insets.bottom + 24 }]}>
@@ -117,4 +128,3 @@ const styles = StyleSheet.create({
     letterSpacing: 1.2
   }
 });
-

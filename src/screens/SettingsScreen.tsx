@@ -1,7 +1,10 @@
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View, Switch, TouchableOpacity, Alert } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { useFocusEffect } from '@react-navigation/native';
+import * as ScreenOrientation from 'expo-screen-orientation';
+
 import type { RootStackParamList } from '../navigation';
 import { useGame } from '../state/GameContext';
 
@@ -19,6 +22,15 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
   const [largeText, setLargeText] = useState(false);
   const [highContrast, setHighContrast] = useState(false);
   const [language, setLanguage] = useState<'TR' | 'EN'>('TR');
+
+  useFocusEffect(
+    useCallback(() => {
+      const lockPortrait = async () => {
+        await ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
+      };
+      lockPortrait();
+    }, [])
+  );
 
   const handleReset = () => {
     Alert.alert(

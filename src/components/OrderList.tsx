@@ -1,10 +1,9 @@
 import React from 'react';
-import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
-import { productImages } from '../assets/productImages';
 import { buildOrderKey, getProductName, getVariantByKey } from '../data/products';
-import { ProductId, PRODUCTS } from '../data/products';
 import type { OrderItem } from '../types/level';
+import { CartoonProduct } from './CartoonProduct';
 
 interface OrderListProps {
   items: OrderItem[];
@@ -13,14 +12,6 @@ interface OrderListProps {
   title?: string;
   onItemPress?: (item: OrderItem) => void;
 }
-
-const toProductId = (id: string): ProductId | null => {
-  const normalized = id.replace(/[-\s]/g, '_').toUpperCase();
-  if (Object.prototype.hasOwnProperty.call(PRODUCTS, normalized)) {
-    return normalized as ProductId;
-  }
-  return null;
-};
 
 // Sipariş listesini gösteren ortak komponent.
 export const OrderList: React.FC<OrderListProps> = ({
@@ -40,10 +31,6 @@ export const OrderList: React.FC<OrderListProps> = ({
         const variant = getVariantByKey(item.productId, item.brandId);
         const name = variant?.displayName ?? getProductName(item.productId, item.brandId);
 
-        const mappedId = toProductId(item.productId);
-        const visuals = (mappedId ? productImages[mappedId] : undefined) 
-          ?? productImages[item.productId];
-
         return (
           <TouchableOpacity 
             key={key} 
@@ -52,11 +39,8 @@ export const OrderList: React.FC<OrderListProps> = ({
             activeOpacity={onItemPress ? 0.7 : 1}
           >
             <View style={styles.iconPlaceholder}>
-              {visuals?.image ? (
-                <Image source={visuals.image} style={styles.iconImage} resizeMode="contain" />
-              ) : (
-                <Text style={styles.iconEmoji}>{visuals?.emojiFallback ?? '📦'}</Text>
-              )}
+              {/* CartoonProduct bileşeni kullanılıyor, scale ile küçültüldü */}
+              <CartoonProduct id={item.productId} scale={0.7} />
             </View>
             <View style={styles.details}>
               <Text style={styles.name}>{name}</Text>
@@ -106,14 +90,8 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     backgroundColor: '#1E293B',
     alignItems: 'center',
-    justifyContent: 'center'
-  },
-  iconImage: {
-    width: 32,
-    height: 32
-  },
-  iconEmoji: {
-    fontSize: 24
+    justifyContent: 'center',
+    overflow: 'hidden' // CartoonProduct dışarı taşarsa kes
   },
   details: {
     flex: 1
@@ -148,4 +126,3 @@ const styles = StyleSheet.create({
     color: '#F8FAFC'
   }
 });
-

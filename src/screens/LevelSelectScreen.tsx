@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useFocusEffect } from '@react-navigation/native';
+import * as ScreenOrientation from 'expo-screen-orientation';
 
 import { LEVELS } from '../data/levels';
 import { useGame } from '../state/GameContext';
@@ -15,6 +17,15 @@ export const LevelSelectScreen: React.FC<Props> = ({ navigation }) => {
   const { unlockedLevels, completedLevels } = useGame();
   const unlockedSet = new Set(unlockedLevels);
   const completedSet = new Set(completedLevels);
+
+  useFocusEffect(
+    useCallback(() => {
+      const lockPortrait = async () => {
+        await ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
+      };
+      lockPortrait();
+    }, [])
+  );
 
   return (
     <View
@@ -48,7 +59,7 @@ export const LevelSelectScreen: React.FC<Props> = ({ navigation }) => {
                 completed ? styles.levelCardCompleted : undefined
               ]}
               disabled={locked}
-              onPress={() => navigation.navigate('Order', { levelId: item.levelId })}
+              onPress={() => navigation.navigate('GamePlay', { levelId: item.levelId })}
             >
               <Text style={styles.levelNumber}>Level {item.levelId}</Text>
               <Text style={styles.customerType}>
@@ -137,4 +148,3 @@ const styles = StyleSheet.create({
     fontWeight: '700'
   }
 });
-

@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { useFocusEffect } from '@react-navigation/native';
+import * as ScreenOrientation from 'expo-screen-orientation';
 
 import type { RootStackParamList } from '../navigation';
 import { XPBar } from '../components/XPBar';
@@ -27,13 +29,22 @@ export const LevelResultScreen: React.FC<Props> = ({ route, navigation }) => {
   const nextLevelId = success ? levelId + 1 : levelId;
   const canPlayNext = success && unlockedLevels.includes(nextLevelId);
 
+  useFocusEffect(
+    useCallback(() => {
+      const lockPortrait = async () => {
+        await ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
+      };
+      lockPortrait();
+    }, [])
+  );
+
   const handleRetry = () => {
-    navigation.replace('Order', { levelId });
+    navigation.replace('GamePlay', { levelId });
   };
 
   const handleNext = () => {
     if (canPlayNext) {
-      navigation.replace('Order', { levelId: nextLevelId });
+      navigation.replace('GamePlay', { levelId: nextLevelId });
     } else {
       navigation.replace('LevelSelect');
     }
@@ -88,24 +99,29 @@ export const LevelResultScreen: React.FC<Props> = ({ route, navigation }) => {
         ) : null}
 
         <View style={styles.buttonRow}>
-          <TouchableOpacity style={styles.secondaryButton} onPress={handleLevelSelect}>
-            <Text style={styles.secondaryText}>Level Seç</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.primaryButton} onPress={handleRetry}>
-            <Text style={styles.primaryText}>Tekrar Oyna</Text>
-          </TouchableOpacity>
+          {/* Sol Buton: Her zaman 'Tekrar Oyna' veya 'Level Seç' (Başarısızsa) */}
+          {success ? (
+             <TouchableOpacity style={styles.secondaryButton} onPress={handleRetry}>
+               <Text style={styles.secondaryText}>Tekrar Oyna</Text>
+             </TouchableOpacity>
+          ) : (
+             <TouchableOpacity style={styles.secondaryButton} onPress={handleLevelSelect}>
+               <Text style={styles.secondaryText}>Level Seç</Text>
+             </TouchableOpacity>
+          )}
+
+          {/* Sağ Buton: Başarılıysa 'Sonraki Level', Başarısızsa 'Tekrar Oyna' */}
+          {success ? (
+            <TouchableOpacity style={styles.primaryButton} onPress={handleNext}>
+              <Text style={styles.primaryText}>Sonraki Level ({nextLevelId})</Text>
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity style={styles.primaryButton} onPress={handleRetry}>
+              <Text style={styles.primaryText}>Tekrar Oyna</Text>
+            </TouchableOpacity>
+          )}
         </View>
 
-        {success ? (
-          <TouchableOpacity
-            style={[styles.primaryButton, styles.nextButton]}
-            onPress={handleNext}
-          >
-            <Text style={styles.primaryText}>
-              {canPlayNext ? `Sonraki Level (${nextLevelId})` : 'Level Seçimine Dön'}
-            </Text>
-          </TouchableOpacity>
-        ) : null}
       </View>
     </View>
   );
@@ -178,7 +194,8 @@ const styles = StyleSheet.create({
   },
   buttonRow: {
     flexDirection: 'row',
-    gap: 12
+    gap: 12,
+    marginTop: 10
   },
   secondaryButton: {
     flex: 1,
@@ -200,13 +217,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#22D3EE'
   },
-  nextButton: {
-    alignSelf: 'stretch'
-  },
   primaryText: {
     fontSize: 16,
     fontWeight: '700',
     color: '#0B1120'
   }
 });
-
