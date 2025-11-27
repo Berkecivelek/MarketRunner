@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useMemo, useState } from '
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import type { GameMode } from '../types/common';
+import { soundManager } from '../utils/SoundManager';
 
 interface GameState {
   coins: number;
@@ -12,6 +13,10 @@ interface GameState {
   activeLevelId?: number | null;
   gameMode?: GameMode;
   isLoading?: boolean;
+  audioSettings: {
+    music: boolean;
+    sfx: boolean;
+  };
 }
 
 interface LevelCompletionPayload {
@@ -34,6 +39,9 @@ interface GameContextValue extends GameState {
   completeLevel: (payload: LevelCompletionPayload) => LevelCompletionResult;
   resetActiveLevel: () => void;
   getNextXpThreshold: () => number;
+  toggleMusic: (enabled: boolean) => void;
+  toggleSfx: (enabled: boolean) => void;
+  resetProgress: () => void;
 }
 
 const STORAGE_KEY = '@market_runner_state_v1';
@@ -57,7 +65,11 @@ const INITIAL_STATE: GameState = {
   completedLevels: [],
   activeLevelId: null,
   gameMode: undefined,
-  isLoading: true
+  isLoading: true,
+  audioSettings: {
+    music: true,
+    sfx: true
+  }
 };
 
 const GameContext = createContext<GameContextValue | undefined>(undefined);
@@ -72,9 +84,18 @@ export const GameProvider: React.FC<React.PropsWithChildren> = ({ children }) =>
         const stored = await AsyncStorage.getItem(STORAGE_KEY);
         if (stored) {
           const parsed = JSON.parse(stored);
-          setState({ ...parsed, activeLevelId: null, isLoading: false });
+          // Ensure audioSettings exists for old saves
+          const loadedState = {
+             ...parsed,
+             activeLevelId: null,
+             isLoading: false,
+             audioSettings: parsed.audioSettings || { music: true, sfx: true }
+          };
+          setState(loadedState);
+          soundManager.setAudioSettings(loadedState.audioSettings.music, loadedState.audioSettings.sfx);
         } else {
           setState((prev) => ({ ...prev, isLoading: false }));
+          soundManager.setAudioSettings(true, true);
         }
       } catch (e) {
         console.error('Failed to load game state', e);
@@ -180,13 +201,41 @@ export const GameProvider: React.FC<React.PropsWithChildren> = ({ children }) =>
     return completionResult;
   };
 
+  const toggleMusic = (enabled: boolean) => {
+    setState(prev => {
+        const newSettings = { ...prev.audioSettings, music: enabled };
+        soundManager.setAudioSettings(newSettings.music, newSettings.sfx);
+        return { ...prev, audioSettings: newSettings };
+    });
+  };
+
+  const toggleSfx = (enabled: boolean) => {
+    setState(prev => {
+        const newSettings = { ...prev.audioSettings, sfx: enabled };
+        soundManager.setAudioSettings(newSettings.music, newSettings.sfx);
+        return { ...prev, audioSettings: newSettings };
+    });
+  };
+
+  const resetProgress = () => {
+      setState({
+          ...INITIAL_STATE,
+          isLoading: false,
+          // Keep audio settings preferred by user even after reset
+          audioSettings: state.audioSettings 
+      });
+  };
+
   const value = useMemo<GameContextValue>(
     () => ({
       ...state,
       startLevel,
       completeLevel,
       resetActiveLevel,
-      getNextXpThreshold: () => getXpThresholdForLevel(state.marketLevel)
+      getNextXpThreshold: () => getXpThresholdForLevel(state.marketLevel),
+      toggleMusic,
+      toggleSfx,
+      resetProgress
     }),
     [state]
   );
@@ -205,4 +254,3 @@ export const useGame = () => {
   }
   return context;
 };
-

@@ -12,11 +12,9 @@ type Props = NativeStackScreenProps<RootStackParamList, 'Settings'>;
 
 export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
   const insets = useSafeAreaInsets();
-  const { resetProgress } = useGame();
+  const { resetProgress, audioSettings, toggleMusic, toggleSfx } = useGame();
 
-  // Local state for UI demonstration (could be connected to a persistent store later)
-  const [musicEnabled, setMusicEnabled] = useState(true);
-  const [sfxEnabled, setSfxEnabled] = useState(true);
+  // Local state for UI not yet in global context
   const [childMode, setChildMode] = useState(true);
   const [showJoystick, setShowJoystick] = useState(false);
   const [largeText, setLargeText] = useState(false);
@@ -83,9 +81,9 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>SES & MÜZİK 🎵</Text>
         <View style={styles.card}>
-          <SettingRow label="Müzik" value={musicEnabled} onValueChange={setMusicEnabled} />
+          <SettingRow label="Müzik" value={audioSettings.music} onValueChange={toggleMusic} />
           <View style={styles.divider} />
-          <SettingRow label="Ses Efektleri" value={sfxEnabled} onValueChange={setSfxEnabled} />
+          <SettingRow label="Ses Efektleri" value={audioSettings.sfx} onValueChange={toggleSfx} />
         </View>
       </View>
 

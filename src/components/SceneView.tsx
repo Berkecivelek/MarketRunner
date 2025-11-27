@@ -1,8 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { StyleSheet, View, Text, TouchableOpacity, Dimensions, Animated, PanResponder } from 'react-native';
+import { StyleSheet, View, Text, TouchableOpacity, Dimensions, Animated, PanResponder, Easing } from 'react-native';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import type { ShelfDefinition } from '../data/products';
 import { CartoonProduct } from './CartoonProduct';
+import { useNavigation } from '@react-navigation/native';
+import { soundManager } from '../utils/SoundManager';
+import { useGame } from '../state/GameContext';
 
 // --- Types ---
 interface SceneViewProps {
@@ -40,7 +43,17 @@ const getProductName = (id: string): string => {
 
     'phone': 'Telefon', 'laptop': 'Laptop', 'headphone': 'Kulaklık', 'camera': 'Kamera',
     'tablet': 'Tablet', 'mouse': 'Mouse', 'gamepad': 'Oyun Kolu', 'watch': 'Saat',
-    'keyboard': 'Klavye', 'speaker': 'Hoparlör', 'charger': 'Şarj', 'usb': 'USB'
+    'keyboard': 'Klavye', 'speaker': 'Hoparlör', 'charger': 'Şarj', 'usb': 'USB',
+
+    // STAPLES (Temel Gıda)
+    'pasta': 'Makarna', 'rice': 'Pirinç', 'lentil': 'Mercimek', 'flour': 'Un',
+    'sugar_bag': 'Şeker', 'salt': 'Tuz', 'oil': 'Sıvı Yağ', 'tomato_paste': 'Salça',
+    'canned_food': 'Konserve', 'bulgur': 'Bulgur', 'semolina': 'İrmik', 'chickpea': 'Nohut',
+
+    // MEAT (Et & Tavuk)
+    'chicken': 'Tavuk', 'minced_meat': 'Kıyma', 'steak': 'Biftek', 'sausage': 'Sosis',
+    'salami': 'Salam', 'sujuk': 'Sucuk', 'meatball': 'Köfte', 'wings': 'Kanat',
+    'drumstick': 'But', 'fish': 'Balık', 'pastrami': 'Pastırma', 'nugget': 'Nugget'
   };
   // Fallback logic
   if (names[id]) return names[id];
@@ -60,7 +73,16 @@ export const SceneView: React.FC<SceneViewProps> = ({ shelves, onProductSelect, 
   const [showOrderList, setShowOrderList] = useState(false);
   const moveInterval = useRef<ReturnType<typeof setInterval> | null>(null);
   
+  const navigation = useNavigation<any>();
+  const { audioSettings } = useGame();
+
   const charLegAnim = useRef(new Animated.Value(0)).current;
+  
+  // NEW: Animation Refs for Feedback
+  const charHeadShake = useRef(new Animated.Value(0)).current;
+  const charJump = useRef(new Animated.Value(0)).current;
+  const confettiAnim = useRef(new Animated.Value(0)).current;
+  const [victoryMode, setVictoryMode] = useState(false);
 
   useEffect(() => {
     const lockLandscape = async () => {
@@ -68,8 +90,11 @@ export const SceneView: React.FC<SceneViewProps> = ({ shelves, onProductSelect, 
         setOrientationLocked(true);
     };
     lockLandscape();
+    soundManager.playMusic('market_theme');
+
     return () => {
         ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
+        soundManager.stopMusic();
     };
   }, []);
 
@@ -77,8 +102,8 @@ export const SceneView: React.FC<SceneViewProps> = ({ shelves, onProductSelect, 
       if (walking) {
           Animated.loop(
               Animated.sequence([
-                  Animated.timing(charLegAnim, { toValue: 1, duration: 150, useNativeDriver: true }),
-                  Animated.timing(charLegAnim, { toValue: 0, duration: 150, useNativeDriver: true })
+                  Animated.timing(charLegAnim, { toValue: 1, duration: 100, useNativeDriver: true }),
+                  Animated.timing(charLegAnim, { toValue: 0, duration: 100, useNativeDriver: true })
               ])
           ).start();
       } else {
@@ -86,16 +111,90 @@ export const SceneView: React.FC<SceneViewProps> = ({ shelves, onProductSelect, 
       }
   }, [walking]);
 
+  // Check Victory Condition
+  useEffect(() => {
+      if (orderItems.length > 0) {
+          const allDone = orderItems.every(item => {
+              const key = `${item.productId}__${item.brandId || 'default'}`;
+              return (collectedMap[key] || 0) >= item.quantity;
+          });
+
+          if (allDone && !victoryMode) {
+              setVictoryMode(true);
+              soundManager.playSfx('victory');
+              startVictoryDance();
+          }
+      }
+  }, [collectedMap, orderItems]);
+
+  const startVictoryDance = () => {
+      // Confetti Animation
+      Animated.loop(
+          Animated.timing(confettiAnim, {
+              toValue: 1,
+              duration: 2000,
+              easing: Easing.linear,
+              useNativeDriver: true
+          })
+      ).start();
+
+      // Dance Animation (Looping Jump & Rotate)
+      Animated.loop(
+          Animated.sequence([
+              Animated.timing(charJump, { toValue: -20, duration: 200, useNativeDriver: true }),
+              Animated.timing(charJump, { toValue: 0, duration: 200, useNativeDriver: true }),
+              Animated.timing(charJump, { toValue: -10, duration: 150, useNativeDriver: true }),
+              Animated.timing(charJump, { toValue: 0, duration: 150, useNativeDriver: true }),
+          ])
+      ).start();
+  };
+
+  const handleProductClick = (productId: string, brandId?: string) => {
+      if (victoryMode) return;
+
+      const key = `${productId}__${brandId || 'default'}`;
+      // Basic local check if item is in order list
+      const isNeeded = orderItems.some(item => {
+          const itemKey = `${item.productId}__${item.brandId || 'default'}`;
+          return itemKey === key && (collectedMap[key] || 0) < item.quantity;
+      });
+
+      if (isNeeded) {
+          // CORRECT
+          soundManager.playSfx('correct'); // 'Yeyy!' logic inside SoundManager
+          // Jump Animation
+          Animated.sequence([
+              Animated.timing(charJump, { toValue: -15, duration: 150, easing: Easing.ease, useNativeDriver: true }),
+              Animated.spring(charJump, { toValue: 0, friction: 5, useNativeDriver: true })
+          ]).start();
+      } else {
+          // WRONG
+          soundManager.playSfx('wrong'); // 'Uh!' logic inside SoundManager
+          // Shake Head Animation
+          Animated.sequence([
+              Animated.timing(charHeadShake, { toValue: 10, duration: 50, useNativeDriver: true }),
+              Animated.timing(charHeadShake, { toValue: -10, duration: 50, useNativeDriver: true }),
+              Animated.timing(charHeadShake, { toValue: 10, duration: 50, useNativeDriver: true }),
+              Animated.timing(charHeadShake, { toValue: 0, duration: 50, useNativeDriver: true })
+          ]).start();
+      }
+
+      onProductSelect(productId, brandId);
+  };
+
   const SHELF_UNIT_WIDTH = 380; 
   const SHELF_GAP = 50;
   const CASHIER_WIDTH = 300;
-  const TOTAL_WIDTH = (SHELF_UNIT_WIDTH * 6) + (SHELF_GAP * 5) + CASHIER_WIDTH + 300; 
+  // Updated TOTAL_WIDTH for 8 shelves
+  const TOTAL_WIDTH = (SHELF_UNIT_WIDTH * 8) + (SHELF_GAP * 7) + CASHIER_WIDTH + 300; 
   const SCREEN_WIDTH_LANDSCAPE = Math.max(Dimensions.get('window').width, Dimensions.get('window').height); 
   
   const moveCharacter = (dir: 'left' | 'right') => {
       setDirection(dir);
       setWalking(true);
-      const speed = 15;
+      const speed = 25; // INCREASED SPEED
+      soundManager.playSfx('step'); // Optional footstep sound
+
       setPlayerX(prev => {
           let newX = dir === 'right' ? prev + speed : prev - speed;
           if (newX < 50) newX = 50;
@@ -154,11 +253,23 @@ export const SceneView: React.FC<SceneViewProps> = ({ shelves, onProductSelect, 
       createItem('tablet'), createItem('mouse'), createItem('gamepad'), createItem('watch'),
       createItem('keyboard'), createItem('speaker'), createItem('charger'), createItem('usb')
   ];
+  const shelfStaples = [
+      createItem('pasta'), createItem('rice'), createItem('lentil'), createItem('bulgur'),
+      createItem('chickpea'), createItem('flour'), createItem('sugar_bag'), createItem('salt'),
+      createItem('oil'), createItem('tomato_paste'), createItem('canned_food'), createItem('semolina')
+  ];
+  const shelfMeat = [
+      createItem('chicken'), createItem('steak'), createItem('minced_meat'), createItem('sausage'),
+      createItem('salami'), createItem('meatball'), createItem('fish'), createItem('nugget'),
+      createItem('pastrami'), createItem('sujuk'), createItem('wings'), createItem('drumstick')
+  ];
 
   const SHELF_DATA = [
       { title: 'MANAV', color: '#4CAF50', items: shelfProduce },
       { title: 'FIRIN', color: '#FF9800', items: shelfBakery },
       { title: 'SÜT ÜRÜNLERİ', color: '#2196F3', items: shelfDairy },
+      { title: 'TEMEL GIDA', color: '#795548', items: shelfStaples }, // Yeni Raf
+      { title: 'ET & TAVUK', color: '#D32F2F', items: shelfMeat },   // Yeni Raf
       { title: 'İÇECEKLER', color: '#E91E63', items: shelfDrinks },
       { title: 'ATIŞTIRMALIK', color: '#FFC107', items: shelfSnacks },
       { title: 'ELEKTRONİK', color: '#607D8B', items: shelfElectronics },
@@ -170,8 +281,15 @@ export const SceneView: React.FC<SceneViewProps> = ({ shelves, onProductSelect, 
     <View style={styles.container}>
         <View style={styles.uiLayer} pointerEvents="box-none">
              <View style={styles.topBar}>
-                 <TouchableOpacity style={styles.iconButton} onPress={onBack}><Text style={styles.iconText}>🔙</Text></TouchableOpacity>
-                 <TouchableOpacity style={styles.iconButton} onPress={() => setShowOrderList(!showOrderList)}><Text style={styles.iconText}>📝</Text></TouchableOpacity>
+                 <View style={{flexDirection:'row', gap:10}}>
+                    <TouchableOpacity style={styles.iconButton} onPress={onBack}><Text style={styles.iconText}>🔙</Text></TouchableOpacity>
+                    <TouchableOpacity style={styles.iconButton} onPress={() => setShowOrderList(!showOrderList)}><Text style={styles.iconText}>📝</Text></TouchableOpacity>
+                 </View>
+                 
+                 {/* Settings Button (Top Right) */}
+                 <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate('Settings')}>
+                    <Text style={styles.iconText}>⚙️</Text>
+                 </TouchableOpacity>
              </View>
              {showOrderList && (
                  <View style={styles.orderListOverlay}>
@@ -194,6 +312,13 @@ export const SceneView: React.FC<SceneViewProps> = ({ shelves, onProductSelect, 
                      </Animated.ScrollView>
                  </View>
              )}
+
+             {/* Victory Overlay (Simple Confetti Effect Simulation) */}
+             {victoryMode && (
+                <View style={styles.victoryOverlay} pointerEvents="none">
+                    <Text style={styles.victoryText}>HARİKA! 🎉</Text>
+                </View>
+             )}
         </View>
 
         <View style={styles.controlsLayer} pointerEvents="box-none">
@@ -205,7 +330,7 @@ export const SceneView: React.FC<SceneViewProps> = ({ shelves, onProductSelect, 
             <View style={styles.shopInterior}>
                 <View style={styles.ceiling} />
                 <View style={styles.backWall}>
-                    {[0, 1, 2, 3, 4].map(i => (
+                    {[0, 1, 2, 3, 4, 5, 6].map(i => (
                         <View key={i} style={[styles.window, {left: 200 + (i * 600)}]}><View style={styles.sky}/><View style={styles.windowFrame}/></View>
                     ))}
                 </View>
@@ -222,7 +347,7 @@ export const SceneView: React.FC<SceneViewProps> = ({ shelves, onProductSelect, 
                             <React.Fragment key={rowIdx}>
                                 <View style={styles.shelfRow}>
                                     {shelf.items.slice(startIndex, startIndex + 4).map((item, i) => (
-                                        <TouchableOpacity key={`r${rowIdx}-${i}`} style={styles.productSlot} onPress={() => onProductSelect(item.productId, item.brandId)}>
+                                        <TouchableOpacity key={`r${rowIdx}-${i}`} style={styles.productSlot} onPress={() => handleProductClick(item.productId, item.brandId)}>
                                             <CartoonProduct id={item.productId} />
                                             <View style={styles.priceTag}>
                                                 <Text style={styles.productName}>{getProductName(item.productId)}</Text>
@@ -247,7 +372,20 @@ export const SceneView: React.FC<SceneViewProps> = ({ shelves, onProductSelect, 
             </View>
 
             {/* NEW CHARACTER */}
-            <Animated.View style={[styles.character, { left: playerX, transform: [{ scaleX: direction === 'left' ? -1 : 1 }, { translateY: charLegAnim.interpolate({ inputRange: [0, 1], outputRange: [0, -5] }) }] }]}>
+            <Animated.View style={[
+                styles.character, 
+                { 
+                    left: playerX, 
+                    transform: [
+                        { scaleX: direction === 'left' ? -1 : 1 }, 
+                        { translateY: Animated.add(
+                            charLegAnim.interpolate({ inputRange: [0, 1], outputRange: [0, -5] }),
+                            charJump
+                        )},
+                        { rotate: charHeadShake.interpolate({ inputRange: [-10, 10], outputRange: ['-10deg', '10deg'] }) }
+                    ] 
+                }
+            ]}>
                  {/* Hat */}
                  <View style={styles.kidHat}>
                      <View style={styles.kidHatVisor}/>
@@ -273,6 +411,21 @@ export const SceneView: React.FC<SceneViewProps> = ({ shelves, onProductSelect, 
                  </View>
             </Animated.View>
 
+            {/* Confetti Particles (Simplified) */}
+            {victoryMode && [0,1,2,3,4,5,6,7,8,9].map(i => (
+                <Animated.View 
+                    key={`confetti-${i}`}
+                    style={{
+                        position: 'absolute',
+                        left: playerX - 50 + (i * 15),
+                        top: confettiAnim.interpolate({ inputRange: [0, 1], outputRange: ['60%', '20%'] }),
+                        width: 8, height: 8,
+                        backgroundColor: ['#F44336', '#2196F3', '#FFEB3B', '#4CAF50'][i % 4],
+                        opacity: confettiAnim.interpolate({ inputRange: [0, 0.8, 1], outputRange: [1, 1, 0] })
+                    }}
+                />
+            ))}
+
         </Animated.View>
     </View>
   );
@@ -288,12 +441,15 @@ const styles = StyleSheet.create({
     iconButton: { width: 50, height: 50, borderRadius: 25, backgroundColor: 'rgba(0,0,0,0.5)', alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: '#FFF' },
     iconText: { fontSize: 24 },
     
-    orderListOverlay: { position: 'absolute', top: 80, right: 20, backgroundColor: 'rgba(0,0,0,0.9)', padding: 15, borderRadius: 10, borderWidth: 2, borderColor: '#FFCA28', maxHeight: 250 },
+    orderListOverlay: { position: 'absolute', top: 80, right: 80, backgroundColor: 'rgba(0,0,0,0.9)', padding: 15, borderRadius: 10, borderWidth: 2, borderColor: '#FFCA28', maxHeight: 250 },
     orderTitle: { color: '#FFCA28', fontWeight: 'bold', marginBottom: 10 },
     orderItem: { flexDirection: 'row', alignItems: 'center', marginBottom: 5 },
     orderItemDone: { opacity: 0.5 },
     orderText: { color: '#FFF', marginLeft: 15 },
     textDone: { textDecorationLine: 'line-through' },
+    
+    victoryOverlay: { ...StyleSheet.absoluteFillObject, justifyContent: 'center', alignItems: 'center', zIndex: 3000 },
+    victoryText: { fontSize: 60, fontWeight: '900', color: '#FFD700', textShadowColor: 'rgba(0,0,0,0.75)', textShadowOffset: {width: 2, height: 2}, textShadowRadius: 10 },
 
     controlBtn: { width: 80, height: 80, borderRadius: 40, backgroundColor: 'rgba(255,255,255,0.2)', position: 'absolute', bottom: 30, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: '#FFF' },
     controlText: { fontSize: 40, color: '#FFF' },
