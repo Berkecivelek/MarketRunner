@@ -311,15 +311,7 @@ export const GamePlayScreen: React.FC<Props> = ({ navigation, route }) => {
   }
 
   const getBackgroundColor = () => {
-    // Kullanıcı isteği üzerine sabit koyu tema
     return '#020617'; 
-    /* 
-    switch (gameMode) {
-      case 'MARKET': return COLORS.market;
-      case 'SUPERMARKET': return COLORS.supermarket;
-      default: return COLORS.bakkal;
-    }
-    */
   };
 
   if (showScene && !selectedShelfId) {
@@ -374,9 +366,17 @@ export const GamePlayScreen: React.FC<Props> = ({ navigation, route }) => {
     <SafeAreaView style={[styles.container, { backgroundColor: getBackgroundColor() }]}>
       <CloudTransition visible={isTransitioningScene} onTransitionEnd={onTransitionEnd} />
       <View style={styles.topBar}>
-        <TouchableOpacity onPress={() => phase === 'collect' ? setShowScene(true) : navigation.navigate('LevelSelect')}>
-          <Text style={styles.backText}>{phase === 'collect' ? '← Reyonlar' : '← Çıkış'}</Text>
-        </TouchableOpacity>
+        <View style={styles.topBarLeft}>
+           <TouchableOpacity onPress={() => navigation.navigate('LevelSelect')} style={styles.exitButton}>
+              <Text style={styles.exitButtonText}>✕</Text>
+           </TouchableOpacity>
+           {phase === 'collect' && (
+              <TouchableOpacity onPress={() => setShowScene(true)}>
+                <Text style={styles.backText}>← Reyonlar</Text>
+              </TouchableOpacity>
+           )}
+        </View>
+
         <View style={styles.orderSummary}>
           <Text style={styles.topTitle}>Level {level.levelId}</Text>
           <Text style={styles.subtitle}>
@@ -492,6 +492,25 @@ const styles = StyleSheet.create({
     paddingTop: 8,
     paddingBottom: 12
   },
+  topBarLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12
+  },
+  exitButton: {
+    width: 32,
+    height: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#1F2937',
+    borderRadius: 16
+  },
+  exitButtonText: {
+    fontSize: 18,
+    color: '#F87171',
+    fontWeight: 'bold',
+    marginTop: -2
+  },
   backText: {
     fontSize: 14,
     color: '#93C5FD'
@@ -525,7 +544,7 @@ const styles = StyleSheet.create({
     flexShrink: 1
   },
   orderListScroll: {
-    maxHeight: 240 // Arttırıldı
+    maxHeight: 240
   },
   instructionsBox: {
     marginTop: 8,
@@ -553,7 +572,7 @@ const styles = StyleSheet.create({
   tabsContainer: {
     height: 50,
     marginBottom: 10,
-    zIndex: 10, // Ensure tabs are clickable
+    zIndex: 10,
     elevation: 10
   },
   tabScroll: {
@@ -593,7 +612,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     borderRadius: 14,
-    backgroundColor: 'rgba(0, 0, 0, 0.3)', // Daha şeffaf
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 24,
@@ -629,10 +648,10 @@ const styles = StyleSheet.create({
     fontWeight: '600'
   },
   primaryButton: {
-    marginTop: 8, // Azaltıldı
+    marginTop: 8,
     backgroundColor: '#1E3A8A',
     borderRadius: 18,
-    paddingVertical: 10, // Azaltıldı
+    paddingVertical: 10,
     alignItems: 'center'
   },
   primaryButtonText: {
