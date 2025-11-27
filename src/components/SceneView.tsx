@@ -290,7 +290,7 @@ export const SceneView: React.FC<SceneViewProps> = ({ shelves, onProductSelect, 
   return (
     <View style={styles.container}>
         <View style={styles.uiLayer} pointerEvents="box-none">
-             <View style={styles.topBar}>
+             <View style={styles.topBar} pointerEvents="box-none">
                  {/* Left: Back Button */}
                  <TouchableOpacity style={styles.iconButton} onPress={onBack}>
                     <Text style={styles.iconText}>🔙</Text>
