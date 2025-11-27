@@ -508,16 +508,16 @@ const styles = StyleSheet.create({
     controlBtn: { width: 80, height: 80, borderRadius: 40, backgroundColor: 'rgba(255,255,255,0.2)', position: 'absolute', bottom: 30, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: '#FFF' },
     controlText: { fontSize: 40, color: '#FFF' },
 
-    shopInterior: { ...StyleSheet.absoluteFillObject, zIndex: 0, backgroundColor: '#E0E0E0' },
-    ceiling: { position: 'absolute', top: 0, left: 0, right: 0, height: '18%', backgroundColor: '#CFD8DC', borderBottomWidth: 2, borderColor: '#90A4AE', zIndex: 5 }, // Reduced height & added zIndex
-    backWall: { position: 'absolute', top: '18%', bottom: '20%', left: 0, right: 0, backgroundColor: '#FFF3E0', zIndex: 1 }, // Adjusted top
-    window: { position: 'absolute', top: 30, width: 120, height: 100, backgroundColor: '#81D4FA', borderWidth: 4, borderColor: '#5D4037' },
-    windowFrame: { position: 'absolute', top: '50%', width: '100%', height: 4, backgroundColor: '#5D4037' },
+    shopInterior: { ...StyleSheet.absoluteFillObject, zIndex: -1, backgroundColor: '#E0E0E0' },
+    ceiling: { position: 'absolute', top: 0, left: 0, right: 0, height: '18%', backgroundColor: '#CFD8DC', borderBottomWidth: 2, borderColor: '#90A4AE', zIndex: -1 }, // Reduced height & added zIndex
+    backWall: { position: 'absolute', top: '18%', bottom: '20%', left: 0, right: 0, backgroundColor: '#FFF3E0', zIndex: -1 }, // Adjusted top
+    window: { position: 'absolute', top: 30, width: 120, height: 100, backgroundColor: '#81D4FA', borderWidth: 4, borderColor: '#5D4037', zIndex: -1 },
+    windowFrame: { position: 'absolute', top: '50%', width: '100%', height: 4, backgroundColor: '#5D4037', zIndex: -1 },
     sky: { flex: 1, backgroundColor: '#B3E5FC' },
-    floor: { position: 'absolute', bottom: 0, left: 0, right: 0, height: '20%', backgroundColor: '#8D6E63', borderTopWidth: 4, borderColor: '#5D4037' },
+    floor: { position: 'absolute', bottom: 0, left: 0, right: 0, height: '20%', backgroundColor: '#8D6E63', borderTopWidth: 4, borderColor: '#5D4037', zIndex: -1 },
     floorPattern: { ...StyleSheet.absoluteFillObject, opacity: 0.1 },
 
-    shelfUnit: { position: 'absolute', bottom: '20%', width: 380, height: 280, backgroundColor: '#8D6E63', borderWidth: 4, borderColor: '#5D4037', borderRadius: 10, zIndex: 10 },
+    shelfUnit: { position: 'absolute', bottom: '20%', width: 380, height: 280, backgroundColor: '#8D6E63', borderWidth: 4, borderColor: '#5D4037', borderRadius: 10, zIndex: 100 },
     shelfHeader: { height: 35, alignItems: 'center', justifyContent: 'center', borderBottomWidth: 2, borderColor: 'rgba(0,0,0,0.2)' },
     shelfTitle: { color: '#FFF', fontWeight: 'bold', fontSize: 14 },
     shelfContent: { flex: 1, justifyContent: 'space-evenly', padding: 5 },
