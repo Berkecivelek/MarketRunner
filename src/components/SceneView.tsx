@@ -288,15 +288,20 @@ export const SceneView: React.FC<SceneViewProps> = ({ shelves, onProductSelect, 
     <View style={styles.container}>
         <View style={styles.uiLayer} pointerEvents="box-none">
              <View style={styles.topBar}>
-                 <View style={{flexDirection:'row', gap:10}}>
-                    <TouchableOpacity style={styles.iconButton} onPress={onBack}><Text style={styles.iconText}>🔙</Text></TouchableOpacity>
-                    <TouchableOpacity style={styles.iconButton} onPress={() => setShowOrderList(!showOrderList)}><Text style={styles.iconText}>📝</Text></TouchableOpacity>
-                 </View>
-                 
-                 {/* Settings Button (Top Right) */}
-                 <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate('Settings')}>
-                    <Text style={styles.iconText}>⚙️</Text>
+                 {/* Left: Back Button */}
+                 <TouchableOpacity style={styles.iconButton} onPress={onBack}>
+                    <Text style={styles.iconText}>🔙</Text>
                  </TouchableOpacity>
+                 
+                 {/* Right: Settings and List Buttons */}
+                 <View style={{flexDirection:'column', gap:10}}>
+                     <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate('Settings')}>
+                        <Text style={styles.iconText}>⚙️</Text>
+                     </TouchableOpacity>
+                     <TouchableOpacity style={styles.iconButton} onPress={() => setShowOrderList(!showOrderList)}>
+                        <Text style={styles.iconText}>📝</Text>
+                     </TouchableOpacity>
+                 </View>
              </View>
              {showOrderList && (
                  <View style={styles.orderListOverlay}>
