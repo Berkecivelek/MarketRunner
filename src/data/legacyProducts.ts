@@ -232,34 +232,41 @@ const PRODUCT_DEFINITIONS: ProductDefinition[] = [
     category: 'produce',
     baseColor: '#F06292',
     shelfTitle: 'Meyve & Sebze'
-  }
+  },
+  // --- YENİ EKLENENLER (Staples) ---
+  { id: 'lentil', name: 'Mercimek', category: 'pantry', baseColor: '#D32F2F', shelfTitle: 'Temel Gıda' },
+  { id: 'bulgur', name: 'Bulgur', category: 'pantry', baseColor: '#FFE0B2', shelfTitle: 'Temel Gıda' },
+  { id: 'chickpea', name: 'Nohut', category: 'pantry', baseColor: '#FFF9C4', shelfTitle: 'Temel Gıda' },
+  { id: 'flour', name: 'Un', category: 'pantry', baseColor: '#FFFFFF', shelfTitle: 'Temel Gıda' },
+  { id: 'sugar_bag', name: 'Şeker', category: 'pantry', baseColor: '#F5F5F5', shelfTitle: 'Temel Gıda' },
+  { id: 'salt', name: 'Tuz', category: 'pantry', baseColor: '#E0E0E0', shelfTitle: 'Temel Gıda' },
+  { id: 'oil', name: 'Sıvı Yağ', category: 'pantry', baseColor: '#FFF9C4', shelfTitle: 'Temel Gıda' },
+  { id: 'tomato_paste', name: 'Salça', category: 'pantry', baseColor: '#C62828', shelfTitle: 'Temel Gıda' },
+  { id: 'canned_food', name: 'Konserve', category: 'pantry', baseColor: '#90A4AE', shelfTitle: 'Temel Gıda' },
+  { id: 'semolina', name: 'İrmik', category: 'pantry', baseColor: '#FFF3E0', shelfTitle: 'Temel Gıda' },
+  
+  // --- YENİ EKLENENLER (Meat) ---
+  { id: 'steak', name: 'Biftek', category: 'butcher', baseColor: '#B71C1C', shelfTitle: 'Et & Tavuk' },
+  { id: 'minced_meat', name: 'Kıyma', category: 'butcher', baseColor: '#EF5350', shelfTitle: 'Et & Tavuk' },
+  { id: 'sausage', name: 'Sosis', category: 'butcher', baseColor: '#D32F2F', shelfTitle: 'Et & Tavuk' },
+  { id: 'salami', name: 'Salam', category: 'butcher', baseColor: '#E57373', shelfTitle: 'Et & Tavuk' },
+  { id: 'meatball', name: 'Köfte', category: 'butcher', baseColor: '#795548', shelfTitle: 'Et & Tavuk' },
+  { id: 'nugget', name: 'Nugget', category: 'butcher', baseColor: '#FFECB3', shelfTitle: 'Et & Tavuk' },
+  { id: 'pastrami', name: 'Pastırma', category: 'butcher', baseColor: '#B71C1C', shelfTitle: 'Et & Tavuk' },
+  { id: 'wings', name: 'Kanat', category: 'butcher', baseColor: '#FFCC80', shelfTitle: 'Et & Tavuk' },
+  { id: 'drumstick', name: 'But', category: 'butcher', baseColor: '#FFE0B2', shelfTitle: 'Et & Tavuk' }
 ];
 
 const variants: ProductVariant[] = PRODUCT_DEFINITIONS.flatMap((product) => {
-  // TEMPORARY: Force single variant per product (ignore brands)
-  // if (!product.brands || product.brands.length === 0) {
-    return [
-      {
-        productId: product.id,
-        displayName: product.name,
-        color: product.baseColor,
-        icon: product.icon,
-        shelfTitle: product.shelfTitle
-      }
-    ];
-  // }
-
-  /*
-  return product.brands.map((brand) => ({
-    productId: product.id,
-    brandId: brand.id,
-    displayName: brand.name,
-    color: brand.accentColor,
-    icon: product.icon,
-    shelfTitle: product.shelfTitle,
-    badgeText: brand.shortCode
-  }));
-  */
+  return [
+    {
+      productId: product.id,
+      displayName: product.name,
+      color: product.baseColor,
+      icon: product.icon,
+      shelfTitle: product.shelfTitle
+    }
+  ];
 });
 
 export const PRODUCT_VARIANTS = variants;
@@ -327,7 +334,6 @@ export const getProductName = (productId: string, brandId?: string) => {
 
 export const getVariantsForMode = (mode: GameMode): ProductVariant[] => {
   return PRODUCT_DEFINITIONS.flatMap((product) => {
-    // BAKKAL: Sadece 1 tane (Markasız/Varsayılan)
     if (mode === 'BAKKAL') {
       return [{
         productId: product.id,
@@ -338,9 +344,6 @@ export const getVariantsForMode = (mode: GameMode): ProductVariant[] => {
       }];
     }
 
-    // MARKET: Varsayılan + Maksimum 2 Marka
-    // Markaları listele, yoksa default dön.
-    // Market modunda "default" yerine markalı ürünleri tercih edelim ki çeşitlilik olsun.
     if (mode === 'MARKET') {
       const brands = (product.brands || []).slice(0, 2);
       if (brands.length === 0) {
@@ -363,7 +366,6 @@ export const getVariantsForMode = (mode: GameMode): ProductVariant[] => {
       }));
     }
 
-    // SUPERMARKET: Tüm Markalar
     if (product.brands && product.brands.length > 0) {
       return product.brands.map(brand => ({
         productId: product.id,
@@ -376,7 +378,6 @@ export const getVariantsForMode = (mode: GameMode): ProductVariant[] => {
       }));
     }
     
-    // Markası yoksa varsayılan
     return [{
       productId: product.id,
       displayName: product.name,
@@ -392,7 +393,6 @@ export const getShelvesForMode = (mode: GameMode): ShelfDefinition[] => {
   
   return categoryOrder.map((category) => {
     const definitions = PRODUCT_DEFINITIONS.filter((product) => product.category === category);
-    // Bu shelf için uygun variantları bul (productId eşleşmesi üzerinden)
     const variantsForShelf = variants.filter((variant) =>
       definitions.some((product) => product.id === variant.productId)
     );
@@ -416,4 +416,3 @@ export const getShelvesForMode = (mode: GameMode): ShelfDefinition[] => {
     };
   });
 };
-
