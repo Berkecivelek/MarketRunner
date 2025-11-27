@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { StyleSheet, View, Text, TouchableOpacity, Dimensions, Animated, PanResponder, Easing } from 'react-native';
+import { StyleSheet, View, Text, TouchableOpacity, Dimensions, Animated, PanResponder, Easing, Switch } from 'react-native';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import { useFocusEffect } from '@react-navigation/native';
 import type { ShelfDefinition } from '../data/products';
@@ -72,20 +72,19 @@ export const SceneView: React.FC<SceneViewProps> = ({ shelves, onProductSelect, 
   const [direction, setDirection] = useState<'left' | 'right'>('right');
   const [walking, setWalking] = useState(false);
   const [showOrderList, setShowOrderList] = useState(false);
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
   const moveInterval = useRef<ReturnType<typeof setInterval> | null>(null);
   
   const navigation = useNavigation<any>();
-  const { audioSettings } = useGame();
+  const { audioSettings, toggleMusic, toggleSfx } = useGame();
 
+  // Animation Refs
   const charLegAnim = useRef(new Animated.Value(0)).current;
-  
-  // NEW: Animation Refs for Feedback
   const charHeadShake = useRef(new Animated.Value(0)).current;
   const charJump = useRef(new Animated.Value(0)).current;
   const confettiAnim = useRef(new Animated.Value(0)).current;
   const [victoryMode, setVictoryMode] = useState(false);
 
-  // Use useFocusEffect to ensure landscape mode is active whenever this screen is focused
   useFocusEffect(
     useCallback(() => {
       const lockLandscape = async () => {
@@ -95,10 +94,7 @@ export const SceneView: React.FC<SceneViewProps> = ({ shelves, onProductSelect, 
       lockLandscape();
       soundManager.playMusic('market_theme');
 
-      // Cleanup function runs when the component unmounts or loses focus
       return () => {
-          // Lock back to portrait only if we are actually leaving the SceneView
-          // However, to be safe and consistent with user request, we default to Portrait elsewhere.
           ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
           soundManager.stopMusic();
       };
@@ -109,8 +105,9 @@ export const SceneView: React.FC<SceneViewProps> = ({ shelves, onProductSelect, 
       if (walking) {
           Animated.loop(
               Animated.sequence([
-                  Animated.timing(charLegAnim, { toValue: 1, duration: 100, useNativeDriver: true }),
-                  Animated.timing(charLegAnim, { toValue: 0, duration: 100, useNativeDriver: true })
+                  Animated.timing(charLegAnim, { toValue: 1, duration: 150, useNativeDriver: true }),
+                  Animated.timing(charLegAnim, { toValue: -1, duration: 150, useNativeDriver: true }),
+                  Animated.timing(charLegAnim, { toValue: 0, duration: 150, useNativeDriver: true })
               ])
           ).start();
       } else {
@@ -145,7 +142,7 @@ export const SceneView: React.FC<SceneViewProps> = ({ shelves, onProductSelect, 
           })
       ).start();
 
-      // Dance Animation (Looping Jump & Rotate)
+      // Dance Animation
       Animated.loop(
           Animated.sequence([
               Animated.timing(charJump, { toValue: -20, duration: 200, useNativeDriver: true }),
@@ -160,24 +157,19 @@ export const SceneView: React.FC<SceneViewProps> = ({ shelves, onProductSelect, 
       if (victoryMode) return;
 
       const key = `${productId}__${brandId || 'default'}`;
-      // Basic local check if item is in order list
       const isNeeded = orderItems.some(item => {
           const itemKey = `${item.productId}__${item.brandId || 'default'}`;
           return itemKey === key && (collectedMap[key] || 0) < item.quantity;
       });
 
       if (isNeeded) {
-          // CORRECT
           soundManager.playSfx('correct'); 
-          // Jump Animation
           Animated.sequence([
               Animated.timing(charJump, { toValue: -15, duration: 150, easing: Easing.ease, useNativeDriver: true }),
               Animated.spring(charJump, { toValue: 0, friction: 5, useNativeDriver: true })
           ]).start();
       } else {
-          // WRONG
           soundManager.playSfx('wrong'); 
-          // Shake Head Animation
           Animated.sequence([
               Animated.timing(charHeadShake, { toValue: 10, duration: 50, useNativeDriver: true }),
               Animated.timing(charHeadShake, { toValue: -10, duration: 50, useNativeDriver: true }),
@@ -192,15 +184,14 @@ export const SceneView: React.FC<SceneViewProps> = ({ shelves, onProductSelect, 
   const SHELF_UNIT_WIDTH = 380; 
   const SHELF_GAP = 50;
   const CASHIER_WIDTH = 300;
-  // Updated TOTAL_WIDTH for 8 shelves
   const TOTAL_WIDTH = (SHELF_UNIT_WIDTH * 8) + (SHELF_GAP * 7) + CASHIER_WIDTH + 300; 
   const SCREEN_WIDTH_LANDSCAPE = Math.max(Dimensions.get('window').width, Dimensions.get('window').height); 
   
   const moveCharacter = (dir: 'left' | 'right') => {
       setDirection(dir);
       setWalking(true);
-      const speed = 25; // INCREASED SPEED
-      soundManager.playSfx('step'); // Optional footstep sound
+      const speed = 35; // INCREASED SPEED
+      soundManager.playSfx('step');
 
       setPlayerX(prev => {
           let newX = dir === 'right' ? prev + speed : prev - speed;
@@ -282,6 +273,12 @@ export const SceneView: React.FC<SceneViewProps> = ({ shelves, onProductSelect, 
       { title: 'ELEKTRONİK', color: '#607D8B', items: shelfElectronics },
   ];
 
+  // Get collected items to display in cart
+  const collectedItemsList = orderItems.filter(item => {
+      const key = `${item.productId}__${item.brandId || 'default'}`;
+      return (collectedMap[key] || 0) > 0;
+  });
+
   if (!orientationLocked) return <View style={{flex:1, backgroundColor:'#000'}} />;
 
   return (
@@ -295,7 +292,7 @@ export const SceneView: React.FC<SceneViewProps> = ({ shelves, onProductSelect, 
                  
                  {/* Right: Settings and List Buttons */}
                  <View style={{flexDirection:'column', gap:10}}>
-                     <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate('Settings')}>
+                     <TouchableOpacity style={styles.iconButton} onPress={() => setShowSettingsModal(!showSettingsModal)}>
                         <Text style={styles.iconText}>⚙️</Text>
                      </TouchableOpacity>
                      <TouchableOpacity style={styles.iconButton} onPress={() => setShowOrderList(!showOrderList)}>
@@ -303,6 +300,25 @@ export const SceneView: React.FC<SceneViewProps> = ({ shelves, onProductSelect, 
                      </TouchableOpacity>
                  </View>
              </View>
+
+             {/* Settings Modal */}
+             {showSettingsModal && (
+                 <View style={styles.settingsModal}>
+                     <Text style={styles.settingsTitle}>AYARLAR</Text>
+                     <View style={styles.settingRow}>
+                         <Text style={styles.settingLabel}>Müzik 🎵</Text>
+                         <Switch value={audioSettings.music} onValueChange={toggleMusic} />
+                     </View>
+                     <View style={styles.settingRow}>
+                         <Text style={styles.settingLabel}>Sesler 🔊</Text>
+                         <Switch value={audioSettings.sfx} onValueChange={toggleSfx} />
+                     </View>
+                     <TouchableOpacity style={styles.closeButton} onPress={() => setShowSettingsModal(false)}>
+                         <Text style={styles.closeButtonText}>Kapat</Text>
+                     </TouchableOpacity>
+                 </View>
+             )}
+
              {showOrderList && (
                  <View style={styles.orderListOverlay}>
                      <Text style={styles.orderTitle}>Alışveriş Listesi</Text>
@@ -383,17 +399,14 @@ export const SceneView: React.FC<SceneViewProps> = ({ shelves, onProductSelect, 
                  <View style={styles.checkoutCounter}><Text style={styles.checkoutText}>KASA</Text></View>
             </View>
 
-            {/* NEW CHARACTER */}
+            {/* NEW CHARACTER with CART */}
             <Animated.View style={[
                 styles.character, 
                 { 
                     left: playerX, 
                     transform: [
-                        { scaleX: direction === 'left' ? -1 : 1 }, 
-                        { translateY: Animated.add(
-                            charLegAnim.interpolate({ inputRange: [0, 1], outputRange: [0, -5] }),
-                            charJump
-                        )},
+                        { scaleX: direction === 'left' ? -1 : 1 },
+                        { translateY: charJump },
                         { rotate: charHeadShake.interpolate({ inputRange: [-10, 10], outputRange: ['-10deg', '10deg'] }) }
                     ] 
                 }
@@ -416,10 +429,32 @@ export const SceneView: React.FC<SceneViewProps> = ({ shelves, onProductSelect, 
                  </View>
                  {/* Backpack */}
                  <View style={styles.kidBackpack}/>
-                 {/* Legs */}
+                 
+                 {/* Legs - Walking Animation (Rotation) */}
                  <View style={styles.kidLegs}>
-                     <View style={styles.kidLegLeft}/>
-                     <View style={styles.kidLegRight}/>
+                     <Animated.View style={[styles.kidLegLeft, { 
+                         transform: [{ rotate: charLegAnim.interpolate({ inputRange: [-1, 1], outputRange: ['-30deg', '30deg'] }) }] 
+                     }]} />
+                     <Animated.View style={[styles.kidLegRight, { 
+                         transform: [{ rotate: charLegAnim.interpolate({ inputRange: [-1, 1], outputRange: ['30deg', '-30deg'] }) }] 
+                     }]} />
+                 </View>
+
+                 {/* SHOPPING CART */}
+                 <View style={styles.shoppingCart}>
+                     <View style={styles.cartHandle} />
+                     <View style={styles.cartBasket}>
+                         {/* Items inside cart */}
+                         <View style={styles.cartItems}>
+                             {collectedItemsList.map((item, idx) => (
+                                 <View key={idx} style={{ margin: -2 }}>
+                                     <CartoonProduct id={item.productId} scale={0.2} />
+                                 </View>
+                             ))}
+                         </View>
+                     </View>
+                     <View style={styles.cartWheel1} />
+                     <View style={styles.cartWheel2} />
                  </View>
             </Animated.View>
 
@@ -460,6 +495,13 @@ const styles = StyleSheet.create({
     orderText: { color: '#FFF', marginLeft: 15 },
     textDone: { textDecorationLine: 'line-through' },
     
+    settingsModal: { position: 'absolute', top: 80, right: 20, width: 200, backgroundColor: '#FFF', borderRadius: 10, padding: 15, elevation: 5, zIndex: 3000 },
+    settingsTitle: { fontSize: 16, fontWeight: 'bold', color: '#333', marginBottom: 15, textAlign: 'center' },
+    settingRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
+    settingLabel: { fontSize: 14, color: '#333' },
+    closeButton: { marginTop: 10, padding: 8, backgroundColor: '#2196F3', borderRadius: 5, alignItems: 'center' },
+    closeButtonText: { color: '#FFF', fontWeight: 'bold' },
+
     victoryOverlay: { ...StyleSheet.absoluteFillObject, justifyContent: 'center', alignItems: 'center', zIndex: 3000 },
     victoryText: { fontSize: 60, fontWeight: '900', color: '#FFD700', textShadowColor: 'rgba(0,0,0,0.75)', textShadowOffset: {width: 2, height: 2}, textShadowRadius: 10 },
 
@@ -509,5 +551,12 @@ const styles = StyleSheet.create({
     kidBackpack: { position: 'absolute', top: 45, width: 46, height: 35, backgroundColor: '#FF5722', borderRadius: 8, zIndex: 1, borderWidth: 2, borderColor: '#E64A19' },
     kidLegs: { flexDirection: 'row', top: 5, gap: 8 },
     kidLegLeft: { width: 12, height: 20, backgroundColor: '#1565C0', borderRadius: 4, borderWidth: 2, borderColor: '#0D47A1' },
-    kidLegRight: { width: 12, height: 20, backgroundColor: '#1565C0', borderRadius: 4, borderWidth: 2, borderColor: '#0D47A1' }
+    kidLegRight: { width: 12, height: 20, backgroundColor: '#1565C0', borderRadius: 4, borderWidth: 2, borderColor: '#0D47A1' },
+    
+    shoppingCart: { position: 'absolute', right: -45, bottom: 0, width: 50, height: 40 },
+    cartHandle: { position: 'absolute', top: -10, left: -5, width: 10, height: 30, borderLeftWidth: 3, borderTopWidth: 3, borderColor: '#B0BEC5', transform: [{rotate: '-20deg'}] },
+    cartBasket: { position: 'absolute', bottom: 10, width: 50, height: 25, backgroundColor: 'rgba(255,255,255,0.8)', borderWidth: 2, borderColor: '#B0BEC5', borderRadius: 4, overflow: 'hidden', justifyContent: 'flex-end' },
+    cartWheel1: { position: 'absolute', bottom: 0, left: 5, width: 10, height: 10, backgroundColor: '#333', borderRadius: 5 },
+    cartWheel2: { position: 'absolute', bottom: 0, right: 5, width: 10, height: 10, backgroundColor: '#333', borderRadius: 5 },
+    cartItems: { flexDirection: 'row', flexWrap: 'wrap', padding: 2, justifyContent: 'center', alignItems: 'flex-end' }
 });
