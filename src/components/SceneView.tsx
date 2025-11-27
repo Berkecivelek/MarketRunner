@@ -207,13 +207,19 @@ export const SceneView: React.FC<SceneViewProps> = ({ shelves, onProductSelect, 
 
   const panResponder = useRef(
     PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
-      onMoveShouldSetPanResponder: () => true,
+      // Fix: allow taps to pass through to children by returning false
+      onStartShouldSetPanResponder: () => false,
+      onStartShouldSetPanResponderCapture: () => false,
+      onMoveShouldSetPanResponder: (_, gestureState) => {
+          // Only claim responder if movement is significant
+          return Math.abs(gestureState.dx) > 10;
+      },
       onPanResponderMove: (_, gestureState) => {
           if (gestureState.vx > 0.5) moveCharacter('right');
           else if (gestureState.vx < -0.5) moveCharacter('left');
       },
-      onPanResponderRelease: () => setWalking(false)
+      onPanResponderRelease: () => setWalking(false),
+      onPanResponderTerminate: () => setWalking(false)
     })
   ).current;
 
@@ -537,7 +543,7 @@ const styles = StyleSheet.create({
     checkoutCounter: { width: 300, height: 100, backgroundColor: '#8D6E63', borderWidth: 4, borderColor: '#5D4037', justifyContent: 'center', alignItems: 'center', zIndex: 20 },
     checkoutText: { fontSize: 20, fontWeight: 'bold', color: '#FFF' },
 
-    character: { position: 'absolute', bottom: '18%', width: 50, height: 100, zIndex: 50, alignItems: 'center' },
+    character: { position: 'absolute', bottom: '18%', width: 50, height: 100, zIndex: 200, alignItems: 'center' }, // INCREASED Z-INDEX
     kidHat: { position: 'absolute', top: 0, zIndex: 5, alignItems: 'center' },
     kidHatTop: { width: 32, height: 15, backgroundColor: '#FDD835', borderTopLeftRadius: 16, borderTopRightRadius: 16, borderWidth: 2, borderColor: '#FBC02D' },
     kidHatVisor: { position: 'absolute', bottom: 0, width: 40, height: 5, backgroundColor: '#FDD835', borderRadius: 2 },
