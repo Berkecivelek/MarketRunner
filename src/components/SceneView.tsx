@@ -509,8 +509,8 @@ const styles = StyleSheet.create({
     controlText: { fontSize: 40, color: '#FFF' },
 
     shopInterior: { ...StyleSheet.absoluteFillObject, zIndex: 0, backgroundColor: '#E0E0E0' },
-    ceiling: { position: 'absolute', top: 0, left: 0, right: 0, height: '20%', backgroundColor: '#CFD8DC', borderBottomWidth: 2, borderColor: '#90A4AE' },
-    backWall: { position: 'absolute', top: '20%', bottom: '20%', left: 0, right: 0, backgroundColor: '#FFF3E0' },
+    ceiling: { position: 'absolute', top: 0, left: 0, right: 0, height: '18%', backgroundColor: '#CFD8DC', borderBottomWidth: 2, borderColor: '#90A4AE', zIndex: 5 }, // Reduced height & added zIndex
+    backWall: { position: 'absolute', top: '18%', bottom: '20%', left: 0, right: 0, backgroundColor: '#FFF3E0', zIndex: 1 }, // Adjusted top
     window: { position: 'absolute', top: 30, width: 120, height: 100, backgroundColor: '#81D4FA', borderWidth: 4, borderColor: '#5D4037' },
     windowFrame: { position: 'absolute', top: '50%', width: '100%', height: 4, backgroundColor: '#5D4037' },
     sky: { flex: 1, backgroundColor: '#B3E5FC' },
@@ -523,9 +523,9 @@ const styles = StyleSheet.create({
     shelfContent: { flex: 1, justifyContent: 'space-evenly', padding: 5 },
     shelfRow: { flexDirection: 'row', justifyContent: 'space-around' },
     shelfPlank: { height: 8, backgroundColor: '#A1887F', width: '100%', borderRadius: 2 },
-    productSlot: { alignItems: 'center', width: 60, justifyContent: 'flex-end' },
+    productSlot: { alignItems: 'center', width: 60, justifyContent: 'flex-end', zIndex: 20 }, // Added zIndex for clickability
     productName: { fontSize: 8, color: '#333', fontWeight: 'bold', marginBottom: 2, textAlign: 'center' },
-    priceTag: { backgroundColor: '#FFF', paddingHorizontal: 3, borderRadius: 3, marginTop: -2, borderWidth: 1, borderColor: '#CCC', zIndex: 10, alignItems: 'center' },
+    priceTag: { backgroundColor: '#FFF', paddingHorizontal: 3, borderRadius: 3, marginTop: -2, borderWidth: 1, borderColor: '#CCC', zIndex: 25, alignItems: 'center' }, // Higher zIndex
     priceText: { fontSize: 7, fontWeight: 'bold', color: '#FBC02D' },
 
     cashierArea: { position: 'absolute', bottom: '18%', alignItems: 'center', zIndex: 10 },
