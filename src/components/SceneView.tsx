@@ -163,7 +163,8 @@ export const SceneView: React.FC<SceneViewProps> = ({ shelves, onProductSelect, 
       });
 
       if (isNeeded) {
-          soundManager.playSfx('correct'); 
+          soundManager.playSfx('correct');
+          // Seslendirme GamePlayScreen'deki handleSelect'te yapılıyor, burada yapmıyoruz
           Animated.sequence([
               Animated.timing(charJump, { toValue: -15, duration: 150, easing: Easing.ease, useNativeDriver: true }),
               Animated.spring(charJump, { toValue: 0, friction: 5, useNativeDriver: true })
@@ -465,19 +466,30 @@ export const SceneView: React.FC<SceneViewProps> = ({ shelves, onProductSelect, 
             </Animated.View>
 
             {/* Confetti Particles (Simplified) */}
-            {victoryMode && [0,1,2,3,4,5,6,7,8,9].map(i => (
-                <Animated.View 
-                    key={`confetti-${i}`}
-                    style={{
-                        position: 'absolute',
-                        left: playerX - 50 + (i * 15),
-                        top: confettiAnim.interpolate({ inputRange: [0, 1], outputRange: ['60%', '20%'] }),
-                        width: 8, height: 8,
-                        backgroundColor: ['#F44336', '#2196F3', '#FFEB3B', '#4CAF50'][i % 4],
-                        opacity: confettiAnim.interpolate({ inputRange: [0, 0.8, 1], outputRange: [1, 1, 0] })
-                    }}
-                />
-            ))}
+            {victoryMode && [0,1,2,3,4,5,6,7,8,9].map(i => {
+                const screenHeight = Dimensions.get('window').height;
+                const startY = screenHeight * 0.6; // 60% of screen height
+                const endY = screenHeight * 0.2; // 20% of screen height
+                const translateY = confettiAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [0, endY - startY]
+                });
+                
+                return (
+                    <Animated.View 
+                        key={`confetti-${i}`}
+                        style={{
+                            position: 'absolute',
+                            left: playerX - 50 + (i * 15),
+                            top: startY,
+                            width: 8, height: 8,
+                            backgroundColor: ['#F44336', '#2196F3', '#FFEB3B', '#4CAF50'][i % 4],
+                            opacity: confettiAnim.interpolate({ inputRange: [0, 0.8, 1], outputRange: [1, 1, 0] }),
+                            transform: [{ translateY }]
+                        }}
+                    />
+                );
+            })}
 
         </Animated.View>
     </View>

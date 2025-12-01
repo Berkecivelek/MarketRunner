@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -13,6 +13,7 @@ import { SceneView } from '../components/SceneView';
 import { CloudTransition } from '../components/CloudTransition';
 import { Timer } from '../components/Timer';
 import { useGame } from '../state/GameContext';
+import { soundManager } from '../utils/SoundManager';
 import type { RootStackParamList } from '../navigation';
 import type { CollectedItem } from '../types/common';
 import type { OrderItem } from '../types/level';
@@ -56,6 +57,8 @@ export const GamePlayScreen: React.FC<Props> = ({ navigation, route }) => {
   const [showScene, setShowScene] = useState(false);
   const [isTransitioningScene, setIsTransitioningScene] = useState(false);
   const [selectedShelfId, setSelectedShelfId] = useState<string | null>(null);
+  const lastSelectTime = useRef<Record<string, number>>({});
+  const processingKeys = useRef<Set<string>>(new Set()); // İşlenmekte olan key'leri takip et
 
   const shelvesToShow = useMemo(() => SHELVES, []);
   const defaultShelfIndex = useMemo(() => {
@@ -113,19 +116,38 @@ export const GamePlayScreen: React.FC<Props> = ({ navigation, route }) => {
     (key: string) => {
       if (!level || isTransitioning) return;
       if (phase !== 'collect') {
-        setFeedback({ message: 'Önce “Siparişi Hazırla” butonuna dokun.', tone: 'error' });
+        setFeedback({ message: 'Önce "Siparişi Hazırla" butonuna dokun.', tone: 'error' });
         return;
       }
+      
+      // Eğer bu key zaten işleniyorsa, çift çağrıyı önle
+      if (processingKeys.current.has(key)) {
+        return;
+      }
+      
+      // Aynı ürün için kısa süre içinde tekrar seçimi engelle (çift tıklama koruması)
+      const now = Date.now();
+      const lastTime = lastSelectTime.current[key] || 0;
+      if (now - lastTime < 2000) { // 2 saniye cooldown - çift çağrıyı önlemek için
+        return;
+      }
+      
+      // Key'i işleniyor olarak işaretle
+      processingKeys.current.add(key);
+      lastSelectTime.current[key] = now;
+      
       const required = requiredMap[key] ?? 0;
       const collected = collectedMap[key] ?? 0;
 
       if (required === 0) {
         handleWrongSelection(key);
+        processingKeys.current.delete(key); // Key'i temizle
         return;
       }
 
       if (collected >= required) {
         handleWrongSelection(key);
+        processingKeys.current.delete(key); // Key'i temizle
         return;
       }
 
@@ -143,8 +165,17 @@ export const GamePlayScreen: React.FC<Props> = ({ navigation, route }) => {
         }
       ]);
 
+      // Ürün adını İngilizce olarak seslendir (sadece bir kere)
+      // Seslendirme SoundManager'da kontrol ediliyor, burada sadece çağırıyoruz
+      soundManager.speakProductName(productId);
+
       setFeedback({ message: 'Sepete eklendi!', tone: 'success' });
       setWrongKey(null);
+      
+      // Key'i temizle (işlem tamamlandı) - 500ms sonra
+      setTimeout(() => {
+        processingKeys.current.delete(key);
+      }, 500);
     },
     [collectedMap, handleWrongSelection, isTransitioning, level, phase, requiredMap]
   );
