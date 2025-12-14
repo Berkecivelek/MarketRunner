@@ -1,4 +1,5 @@
 import React from 'react';
+import { View, Text } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
@@ -39,28 +40,47 @@ export type RootStackParamList = {
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 // Uygulamanın temel navigasyon yığını.
-export const RootNavigator: React.FC = () => (
-  <NavigationContainer>
-    <Stack.Navigator
-      initialRouteName="Splash"
-      screenOptions={{
-        headerShown: false,
-        animation: 'fade_from_bottom',
-        contentStyle: {
-          backgroundColor: '#020617'
-        }
-      }}
-    >
-      <Stack.Screen name="Splash" component={SplashScreen} />
-      <Stack.Screen name="MainMenu" component={MainMenuScreen} />
-      <Stack.Screen name="LevelSelect" component={LevelSelectScreen} />
-      <Stack.Screen name="Order" component={OrderScreen} />
-      <Stack.Screen name="GamePlay" component={GamePlayScreen} />
-      <Stack.Screen name="Checkout" component={CheckoutAndPackingScreen} />
-      <Stack.Screen name="LevelResult" component={LevelResultScreen} />
-      <Stack.Screen name="MarketUpgrade" component={MarketUpgradeScreen} />
-      <Stack.Screen name="Settings" component={SettingsScreen} />
-    </Stack.Navigator>
-  </NavigationContainer>
-);
+export const RootNavigator: React.FC = () => {
+  try {
+    return (
+      <NavigationContainer
+        onReady={() => {
+          // Navigation hazır olduğunda
+        }}
+        onStateChange={() => {
+          // Navigation state değiştiğinde
+        }}
+      >
+        <Stack.Navigator
+          initialRouteName="Splash"
+          screenOptions={{
+            headerShown: false,
+            animation: 'fade_from_bottom',
+            contentStyle: {
+              backgroundColor: '#020617'
+            }
+          }}
+        >
+          <Stack.Screen name="Splash" component={SplashScreen} />
+          <Stack.Screen name="MainMenu" component={MainMenuScreen} />
+          <Stack.Screen name="LevelSelect" component={LevelSelectScreen} />
+          <Stack.Screen name="Order" component={OrderScreen} />
+          <Stack.Screen name="GamePlay" component={GamePlayScreen} />
+          <Stack.Screen name="Checkout" component={CheckoutAndPackingScreen} />
+          <Stack.Screen name="LevelResult" component={LevelResultScreen} />
+          <Stack.Screen name="MarketUpgrade" component={MarketUpgradeScreen} />
+          <Stack.Screen name="Settings" component={SettingsScreen} />
+        </Stack.Navigator>
+      </NavigationContainer>
+    );
+  } catch (error) {
+    console.error('Navigation error:', error);
+    // Navigation hatası durumunda basit bir fallback göster
+    return (
+      <View style={{ flex: 1, backgroundColor: '#020617', alignItems: 'center', justifyContent: 'center' }}>
+        <Text style={{ color: '#F8FAFC', fontSize: 16 }}>Navigation hatası</Text>
+      </View>
+    );
+  }
+};
 

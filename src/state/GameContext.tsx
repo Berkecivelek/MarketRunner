@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import React, { createContext, useContext, useEffect, useMemo, useState, useCallback } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import type { GameMode } from '../types/common';
@@ -13,6 +13,7 @@ interface GameState {
   activeLevelId?: number | null;
   gameMode?: GameMode;
   isLoading?: boolean;
+  tutorialCompleted: boolean;
   audioSettings: {
     music: boolean;
     sfx: boolean;
@@ -42,6 +43,8 @@ interface GameContextValue extends GameState {
   toggleMusic: (enabled: boolean) => void;
   toggleSfx: (enabled: boolean) => void;
   resetProgress: () => void;
+  completeTutorial: () => void;
+  shouldShowTutorial: (levelId: number) => boolean;
 }
 
 const STORAGE_KEY = '@market_runner_state_v1';
@@ -66,6 +69,7 @@ const INITIAL_STATE: GameState = {
   activeLevelId: null,
   gameMode: undefined,
   isLoading: true,
+  tutorialCompleted: false,
   audioSettings: {
     music: true,
     sfx: true
@@ -89,13 +93,31 @@ export const GameProvider: React.FC<React.PropsWithChildren> = ({ children }) =>
              ...parsed,
              activeLevelId: null,
              isLoading: false,
+             tutorialCompleted: parsed.tutorialCompleted ?? false, // ?? kullanarak null/undefined kontrolü
+             completedLevels: parsed.completedLevels || [], // completedLevels array'i kontrol et
              audioSettings: parsed.audioSettings || { music: true, sfx: true }
           };
+          console.log('GameContext loadedState:', {
+            tutorialCompleted: loadedState.tutorialCompleted,
+            completedLevels: loadedState.completedLevels,
+            levelId: 1,
+            shouldShow: !loadedState.tutorialCompleted && !loadedState.completedLevels.includes(1)
+          });
           setState(loadedState);
-          soundManager.setAudioSettings(loadedState.audioSettings.music, loadedState.audioSettings.sfx);
+          // SoundManager çağrısını try-catch ile koru
+          try {
+            soundManager.setAudioSettings(loadedState.audioSettings.music, loadedState.audioSettings.sfx);
+          } catch (audioError) {
+            console.warn('Failed to set audio settings:', audioError);
+          }
         } else {
           setState((prev) => ({ ...prev, isLoading: false }));
-          soundManager.setAudioSettings(true, true);
+          // SoundManager çağrısını try-catch ile koru
+          try {
+            soundManager.setAudioSettings(true, true);
+          } catch (audioError) {
+            console.warn('Failed to set audio settings:', audioError);
+          }
         }
       } catch (e) {
         console.error('Failed to load game state', e);
@@ -174,8 +196,14 @@ export const GameProvider: React.FC<React.PropsWithChildren> = ({ children }) =>
       }
 
       const completedLevels = new Set<number>(prev.completedLevels);
+      let tutorialCompleted = prev.tutorialCompleted;
+      
       if (payload.success) {
         completedLevels.add(payload.levelId);
+        // Level 1 tamamlandıysa tutorial'i de tamamla
+        if (payload.levelId === 1) {
+          tutorialCompleted = true;
+        }
       }
 
       completionResult = {
@@ -194,7 +222,8 @@ export const GameProvider: React.FC<React.PropsWithChildren> = ({ children }) =>
         marketLevel,
         unlockedLevels: completionResult.unlockedLevels,
         completedLevels: Array.from(completedLevels).sort((a, b) => a - b),
-        activeLevelId: null
+        activeLevelId: null,
+        tutorialCompleted
       };
     });
 
@@ -204,7 +233,11 @@ export const GameProvider: React.FC<React.PropsWithChildren> = ({ children }) =>
   const toggleMusic = (enabled: boolean) => {
     setState(prev => {
         const newSettings = { ...prev.audioSettings, music: enabled };
-        soundManager.setAudioSettings(newSettings.music, newSettings.sfx);
+        try {
+          soundManager.setAudioSettings(newSettings.music, newSettings.sfx);
+        } catch (error) {
+          console.warn('Failed to set audio settings:', error);
+        }
         return { ...prev, audioSettings: newSettings };
     });
   };
@@ -212,7 +245,11 @@ export const GameProvider: React.FC<React.PropsWithChildren> = ({ children }) =>
   const toggleSfx = (enabled: boolean) => {
     setState(prev => {
         const newSettings = { ...prev.audioSettings, sfx: enabled };
-        soundManager.setAudioSettings(newSettings.music, newSettings.sfx);
+        try {
+          soundManager.setAudioSettings(newSettings.music, newSettings.sfx);
+        } catch (error) {
+          console.warn('Failed to set audio settings:', error);
+        }
         return { ...prev, audioSettings: newSettings };
     });
   };
@@ -226,6 +263,40 @@ export const GameProvider: React.FC<React.PropsWithChildren> = ({ children }) =>
       });
   };
 
+  const completeTutorial = () => {
+    setState((prev) => ({
+      ...prev,
+      tutorialCompleted: true,
+    }));
+  };
+
+  const shouldShowTutorial = useCallback((levelId: number): boolean => {
+    // Level 1 değilse tutorial gösterme
+    if (levelId !== 1) {
+      console.log('shouldShowTutorial: levelId !== 1', levelId);
+      return false;
+    }
+    
+    // Level 1 tamamlanmışsa tutorial gösterme
+    if (state.completedLevels.includes(1)) {
+      console.log('shouldShowTutorial: Level 1 already completed');
+      return false;
+    }
+    
+    // Tutorial zaten tamamlanmışsa gösterme
+    if (state.tutorialCompleted) {
+      console.log('shouldShowTutorial: Tutorial already completed');
+      return false;
+    }
+    
+    console.log('shouldShowTutorial: TRUE - showing tutorial', {
+      levelId,
+      completedLevels: state.completedLevels,
+      tutorialCompleted: state.tutorialCompleted
+    });
+    return true;
+  }, [state.completedLevels, state.tutorialCompleted]);
+
   const value = useMemo<GameContextValue>(
     () => ({
       ...state,
@@ -235,13 +306,21 @@ export const GameProvider: React.FC<React.PropsWithChildren> = ({ children }) =>
       getNextXpThreshold: () => getXpThresholdForLevel(state.marketLevel),
       toggleMusic,
       toggleSfx,
-      resetProgress
+      resetProgress,
+      completeTutorial,
+      shouldShowTutorial
     }),
     [state]
   );
 
+  // Loading state'te bile provider'ı render et (null döndürme - bu çökme sebebi olabilir)
+  // isLoading false olana kadar basit bir placeholder göster
   if (state.isLoading) {
-    return null; // Or a loading spinner
+    return (
+      <GameContext.Provider value={value}>
+        {children}
+      </GameContext.Provider>
+    );
   }
 
   return <GameContext.Provider value={value}>{children}</GameContext.Provider>;
@@ -250,7 +329,39 @@ export const GameProvider: React.FC<React.PropsWithChildren> = ({ children }) =>
 export const useGame = () => {
   const context = useContext(GameContext);
   if (!context) {
-    throw new Error('useGame sadece GameProvider içinde kullanılabilir');
+    // Production build'de context undefined olabilir, default değer döndür
+    console.warn('useGame called outside GameProvider, returning default values');
+    return {
+      coins: 0,
+      xp: 0,
+      marketLevel: 1,
+      unlockedLevels: [1],
+      completedLevels: [],
+      activeLevelId: null,
+      gameMode: undefined,
+      isLoading: false,
+      audioSettings: { music: true, sfx: true },
+      tutorialCompleted: false,
+      startLevel: () => {},
+      completeLevel: () => ({
+        levelId: 0,
+        coinsEarned: 0,
+        xpEarned: 0,
+        success: false,
+        totalCoins: 0,
+        totalXp: 0,
+        unlockedLevels: [1],
+        marketLevel: 1,
+        leveledUp: false,
+      }),
+      resetActiveLevel: () => {},
+      getNextXpThreshold: () => 100,
+      toggleMusic: () => {},
+      toggleSfx: () => {},
+      resetProgress: () => {},
+      completeTutorial: () => {},
+      shouldShowTutorial: () => false,
+    } as GameContextValue;
   }
   return context;
 };

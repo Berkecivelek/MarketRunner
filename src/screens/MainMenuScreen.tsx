@@ -25,7 +25,12 @@ export const MainMenuScreen: React.FC<Props> = ({ navigation }) => {
   useFocusEffect(
     useCallback(() => {
       const lockPortrait = async () => {
-        await ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
+        try {
+          await ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
+        } catch (error) {
+          // ScreenOrientation yüklenemezse sessizce devam et
+          console.warn('Failed to lock orientation:', error);
+        }
       };
       lockPortrait();
     }, [])

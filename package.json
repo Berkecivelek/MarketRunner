@@ -5,19 +5,21 @@
   "private": true,
   "scripts": {
     "start": "expo start",
-    "ios": "expo start --ios",
-    "android": "expo start --android",
+    "ios": "expo run:ios",
+    "android": "expo run:android",
     "web": "expo start --web",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit",
+    "bundle:ios": "npx react-native bundle --platform ios --dev false --entry-file index.ts --bundle-output ios/MarketRunner/main.jsbundle --assets-dest ios/MarketRunner/"
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "1.23.1",
     "@react-navigation/native": "^6.1.17",
     "@react-navigation/native-stack": "^6.9.26",
     "expo": "~51.0.0",
+    "expo-asset": "^10.0.10",
     "expo-av": "~14.0.5",
     "expo-screen-orientation": "~7.0.5",
-    "expo-speech": "^14.0.7",
+    "expo-speech": "^12.0.2",
     "expo-status-bar": "~1.12.1",
     "react": "18.2.0",
     "react-native": "0.74.1",

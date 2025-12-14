@@ -12,8 +12,10 @@ import { ShelfView } from '../components/ShelfView';
 import { SceneView } from '../components/SceneView';
 import { CloudTransition } from '../components/CloudTransition';
 import { Timer } from '../components/Timer';
+import { TutorialOverlay } from '../components/TutorialOverlay';
 import { useGame } from '../state/GameContext';
 import { soundManager } from '../utils/SoundManager';
+import { getTutorialStepsForScreen, getTutorialStep, type TutorialStepId } from '../data/tutorialSteps';
 import type { RootStackParamList } from '../navigation';
 import type { CollectedItem } from '../types/common';
 import type { OrderItem } from '../types/level';
@@ -37,7 +39,12 @@ const buildRequiredMap = (items: OrderItem[]) => {
 export const GamePlayScreen: React.FC<Props> = ({ navigation, route }) => {
   const { levelId } = route.params;
   const level = getLevelById(levelId);
-  const { completeLevel, gameMode } = useGame();
+  const { completeLevel, gameMode, shouldShowTutorial } = useGame();
+  
+  // Tutorial state
+  const [currentTutorialStep, setCurrentTutorialStep] = useState<TutorialStepId | null>(null);
+  const tutorialSteps = useMemo(() => getTutorialStepsForScreen('GamePlay'), []);
+  const showTutorial = useMemo(() => shouldShowTutorial(levelId), [levelId, shouldShowTutorial]);
 
   const requiredMap = useMemo(() => (level ? buildRequiredMap(level.orderItems) : {}), [level]);
   const totalRequired = useMemo(() => {
@@ -74,6 +81,13 @@ export const GamePlayScreen: React.FC<Props> = ({ navigation, route }) => {
   }, [requiredKeys, shelvesToShow]);
   const [activeShelfIndex, setActiveShelfIndex] = useState(defaultShelfIndex);
 
+  const collectedTotals = useMemo(() => {
+    const values = Object.values(collectedMap) as number[];
+    return values.reduce((sum, count) => sum + count, 0);
+  }, [collectedMap]);
+
+  const allCollected = totalRequired > 0 && collectedTotals >= totalRequired;
+
   useEffect(() => {
     if (!level) return;
     setCollectedMap({});
@@ -82,18 +96,57 @@ export const GamePlayScreen: React.FC<Props> = ({ navigation, route }) => {
     setWrongKey(null);
     setTimeLeft(level.timeLimit ?? 0);
     setPhase('overview');
-  }, [level]);
+    
+    // Tutorial kontrolü - Level 1 ve tutorial gösterilmeli ise
+    if (showTutorial && tutorialSteps.length > 0) {
+      // İlk adımı göster (GAMEPLAY_COLLECT)
+      setCurrentTutorialStep('GAMEPLAY_COLLECT');
+    } else {
+      setCurrentTutorialStep(null);
+    }
+  }, [level, levelId, showTutorial, tutorialSteps]);
+  
+  // Phase değiştiğinde tutorial adımını güncelle
+  useEffect(() => {
+    if (!showTutorial) return;
+    
+    if (phase === 'collect' && collectedTotals === 0) {
+      // Ürün toplama başladı ama henüz toplanmadı
+      setCurrentTutorialStep('GAMEPLAY_COLLECT');
+    } else if (phase === 'collect' && collectedTotals > 0 && !allCollected) {
+      // Ürün toplanmaya başlandı
+      setCurrentTutorialStep('GAMEPLAY_CART');
+    } else if (allCollected) {
+      // Tüm ürünler toplandı
+      setCurrentTutorialStep('GAMEPLAY_COMPLETE');
+    }
+  }, [phase, collectedTotals, allCollected, showTutorial]);
+  
+  const currentStep = currentTutorialStep 
+    ? getTutorialStep(currentTutorialStep)
+    : null;
+  
+  const handleTutorialNext = () => {
+    if (!currentTutorialStep) return;
+    
+    const nextStep = getTutorialStep(currentTutorialStep);
+    if (nextStep) {
+      const next = getTutorialStep('GAMEPLAY_CART');
+      if (next && currentTutorialStep === 'GAMEPLAY_COLLECT') {
+        setCurrentTutorialStep('GAMEPLAY_CART');
+      } else {
+        setCurrentTutorialStep(null);
+      }
+    }
+  };
+  
+  const handleTutorialSkip = () => {
+    setCurrentTutorialStep(null);
+  };
 
   useEffect(() => {
     setActiveShelfIndex(defaultShelfIndex);
   }, [defaultShelfIndex]);
-
-  const collectedTotals = useMemo(() => {
-    const values = Object.values(collectedMap) as number[];
-    return values.reduce((sum, count) => sum + count, 0);
-  }, [collectedMap]);
-
-  const allCollected = totalRequired > 0 && collectedTotals >= totalRequired;
 
   const highlightKeys = useMemo(() => {
     const keys = new Set<string>();
@@ -136,6 +189,55 @@ export const GamePlayScreen: React.FC<Props> = ({ navigation, route }) => {
       processingKeys.current.add(key);
       lastSelectTime.current[key] = now;
       
+      // Key'i productId ve brandId'ye ayır
+      const [productId] = key.split('__');
+      
+      // ÖNEMLİ: Brand'ları olan ürünler için özel kontrol
+      // Eğer brand variant'ı tıklandıysa ama requiredMap'te default variant varsa, default variant'ı kullan
+      // Bu, orange-juice, milk, bread gibi brand'ları olan tüm ürünler için geçerli
+      const defaultKey = `${productId}__default`;
+      const defaultRequired = requiredMap[defaultKey] ?? 0;
+      const clickedRequired = requiredMap[key] ?? 0;
+      
+      // Eğer tıklanan key'de required yoksa ama default variant'ta varsa, default variant'ı kullan
+      if (clickedRequired === 0 && defaultRequired > 0) {
+        const defaultCollected = collectedMap[defaultKey] ?? 0;
+        
+        if (defaultCollected >= defaultRequired) {
+          handleWrongSelection(key);
+          processingKeys.current.delete(key);
+          return;
+        }
+        
+        // Doğru ürün seçildi - ses çal
+        soundManager.playSfx('correct');
+        
+        // Default variant'ı sepete ekle
+        setCollectedMap((prev) => ({
+          ...prev,
+          [defaultKey]: defaultCollected + 1
+        }));
+        
+        setCollectedItems((prev) => [
+          ...prev,
+          {
+            productId,
+            brandId: undefined
+          }
+        ]);
+        
+        // Seslendirme: productId için İngilizce çeviri
+        soundManager.speakProductName(productId);
+        setFeedback({ message: 'Sepete eklendi!', tone: 'success' });
+        setWrongKey(null);
+        
+        setTimeout(() => {
+          processingKeys.current.delete(key);
+        }, 500);
+        return;
+      }
+      
+      // Normal akış: tıklanan key'de required var
       const required = requiredMap[key] ?? 0;
       const collected = collectedMap[key] ?? 0;
 
@@ -151,12 +253,15 @@ export const GamePlayScreen: React.FC<Props> = ({ navigation, route }) => {
         return;
       }
 
+      // Doğru ürün seçildi - ses çal
+      soundManager.playSfx('correct');
+
       setCollectedMap((prev) => ({
         ...prev,
         [key]: collected + 1
       }));
 
-      const [productId, brandIdPart] = key.split('__');
+      const [, brandIdPart] = key.split('__');
       setCollectedItems((prev) => [
         ...prev,
         {
@@ -217,6 +322,7 @@ export const GamePlayScreen: React.FC<Props> = ({ navigation, route }) => {
 
   const handleStartCollect = useCallback(() => {
     if (!level) return;
+    console.log('handleStartCollect called, starting transition');
     setIsTransitioningScene(true); // Start cloud animation
   }, [level]);
 
@@ -259,7 +365,7 @@ export const GamePlayScreen: React.FC<Props> = ({ navigation, route }) => {
     if (phase === 'collect') {
       setFeedback({ message: 'Şimdi aşağıdaki raftan ürünü bulup sepete ekle!', tone: 'success' });
     } else {
-       setFeedback({ message: 'Önce “Siparişi Hazırla” butonuna dokun.', tone: 'error' });
+       setFeedback({ message: 'Önce "Siparişi Hazırla" butonuna dokun.', tone: 'error' });
     }
   }, [level, phase, shelvesToShow]); // Removed handleSelect dependency
 
@@ -491,6 +597,7 @@ export const GamePlayScreen: React.FC<Props> = ({ navigation, route }) => {
             style={[styles.primaryButton, isTransitioning && styles.disabledButton]}
             onPress={handleCompleteOrder}
             disabled={isTransitioning}
+            testID="completeButton"
           >
             <Text style={styles.primaryButtonText}>Siparişi Tamamla</Text>
           </TouchableOpacity>
@@ -506,6 +613,14 @@ export const GamePlayScreen: React.FC<Props> = ({ navigation, route }) => {
           </Text>
         ) : null}
       </View>
+      
+      {/* Tutorial Overlay */}
+      <TutorialOverlay
+        visible={showTutorial && currentStep !== null}
+        step={currentStep}
+        onNext={handleTutorialNext}
+        onSkip={handleTutorialSkip}
+      />
     </SafeAreaView>
   );
 };

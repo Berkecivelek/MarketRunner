@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useFocusEffect } from '@react-navigation/native';
@@ -6,7 +6,9 @@ import * as ScreenOrientation from 'expo-screen-orientation';
 
 import type { RootStackParamList } from '../navigation';
 import { XPBar } from '../components/XPBar';
+import { TutorialOverlay } from '../components/TutorialOverlay';
 import { useGame } from '../state/GameContext';
+import { getTutorialStep, type TutorialStepId } from '../data/tutorialSteps';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'LevelResult'>;
 
@@ -24,7 +26,33 @@ export const LevelResultScreen: React.FC<Props> = ({ route, navigation }) => {
     failureReason,
     unlockedLevels
   } = route.params;
-  const { unlockedLevels: contextUnlocked } = useGame();
+  const { unlockedLevels: contextUnlocked, shouldShowTutorial, completeTutorial } = useGame();
+  
+  // Tutorial state - Level 1 başarılı tamamlandıysa göster
+  const [showTutorial, setShowTutorial] = useState(false);
+  
+  useEffect(() => {
+    // Level 1 başarılı tamamlandıysa tutorial'i göster
+    if (levelId === 1 && success && shouldShowTutorial(levelId)) {
+      setShowTutorial(true);
+    } else {
+      setShowTutorial(false);
+    }
+  }, [levelId, success, shouldShowTutorial]);
+  
+  const tutorialStep = showTutorial ? getTutorialStep('LEVEL_COMPLETE') : null;
+  
+  const handleTutorialNext = () => {
+    // Tutorial tamamlandı
+    completeTutorial();
+    setShowTutorial(false);
+  };
+  
+  const handleTutorialSkip = () => {
+    // Tutorial atlandı
+    completeTutorial();
+    setShowTutorial(false);
+  };
 
   const nextLevelId = success ? levelId + 1 : levelId;
   const canPlayNext = success && unlockedLevels.includes(nextLevelId);
@@ -32,7 +60,12 @@ export const LevelResultScreen: React.FC<Props> = ({ route, navigation }) => {
   useFocusEffect(
     useCallback(() => {
       const lockPortrait = async () => {
-        await ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
+        try {
+          await ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
+        } catch (error) {
+          // ScreenOrientation yüklenemezse sessizce devam et
+          console.warn('Failed to lock orientation:', error);
+        }
       };
       lockPortrait();
     }, [])
@@ -131,6 +164,14 @@ export const LevelResultScreen: React.FC<Props> = ({ route, navigation }) => {
         </TouchableOpacity>
 
       </View>
+      
+      {/* Tutorial Overlay - Level 1 tamamlandı */}
+      <TutorialOverlay
+        visible={showTutorial && tutorialStep !== null}
+        step={tutorialStep}
+        onNext={handleTutorialNext}
+        onSkip={handleTutorialSkip}
+      />
     </View>
   );
 };

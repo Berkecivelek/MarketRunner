@@ -10,7 +10,12 @@ type Props = NativeStackScreenProps<RootStackParamList, 'Splash'>;
 export const SplashScreen: React.FC<Props> = ({ navigation }) => {
   useEffect(() => {
     const timer = setTimeout(() => {
-      navigation.replace('MainMenu');
+      try {
+        navigation.replace('MainMenu');
+      } catch (error) {
+        // Navigation hatası durumunda sessizce devam et
+        console.warn('Navigation error:', error);
+      }
     }, 1600);
     return () => clearTimeout(timer);
   }, [navigation]);

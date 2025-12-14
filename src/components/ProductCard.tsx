@@ -28,26 +28,50 @@ export interface ProductCardProps {
 }
 
 export const ProductCard: FC<ProductCardProps> = ({ productId, onPress }) => {
-  const product = PRODUCTS[productId];
-  // Try exact match first, then normalization fallback if needed
-  const visuals = productImages[productId] ?? productImages[toProductId(productId) ?? ''];
+  try {
+    const product = PRODUCTS[productId];
+    // Try exact match first, then normalization fallback if needed
+    const visuals = productImages[productId] ?? productImages[toProductId(productId) ?? ''] ?? { emojiFallback: '🛒' };
 
-  const content = visuals?.image ? (
-    <Image source={visuals.image} style={simpleStyles.image} resizeMode="contain" />
-  ) : (
-    <Text style={simpleStyles.emoji}>{visuals?.emojiFallback ?? '🛒'}</Text>
-  );
+    const content = visuals?.image ? (
+      <Image 
+        source={visuals.image} 
+        style={simpleStyles.image} 
+        resizeMode="contain"
+        onError={() => {
+          // Image yüklenemezse sessizce devam et
+        }}
+      />
+    ) : (
+      <Text style={simpleStyles.emoji}>{visuals?.emojiFallback ?? '🛒'}</Text>
+    );
 
-  return (
-    <Pressable
-      onPress={onPress}
-      style={({ pressed }) => [simpleStyles.card, pressed && simpleStyles.pressed]}
-    >
-      <View style={simpleStyles.imageWrapper}>{content}</View>
-      <Text style={simpleStyles.name}>{product?.name ?? productId}</Text>
-      <Text style={simpleStyles.category}>{product?.category ?? ''}</Text>
-    </Pressable>
-  );
+    return (
+      <Pressable
+        onPress={onPress}
+        style={({ pressed }) => [simpleStyles.card, pressed && simpleStyles.pressed]}
+      >
+        <View style={simpleStyles.imageWrapper}>{content}</View>
+        <Text style={simpleStyles.name}>{product?.name ?? productId}</Text>
+        <Text style={simpleStyles.category}>{product?.category ?? ''}</Text>
+      </Pressable>
+    );
+  } catch (error) {
+    // Hata durumunda basit bir fallback göster
+    console.warn('ProductCard render error:', error);
+    return (
+      <Pressable
+        onPress={onPress}
+        style={simpleStyles.card}
+      >
+        <View style={simpleStyles.imageWrapper}>
+          <Text style={simpleStyles.emoji}>🛒</Text>
+        </View>
+        <Text style={simpleStyles.name}>{productId}</Text>
+        <Text style={simpleStyles.category}>Product</Text>
+      </Pressable>
+    );
+  }
 };
 
 const simpleStyles = StyleSheet.create({
@@ -124,7 +148,8 @@ export const ShelfProductCard: FC<ShelfProductCardProps> = ({
   
   // Try mapped ID first, then raw variant ID
   const visuals = (mappedProductId ? productImages[mappedProductId] : undefined) 
-    ?? productImages[variant.productId];
+    ?? productImages[variant.productId]
+    ?? { emojiFallback: '🛒' };
     
   const mappedProduct = mappedProductId ? PRODUCTS[mappedProductId] : undefined;
 
@@ -157,7 +182,14 @@ export const ShelfProductCard: FC<ShelfProductCardProps> = ({
       >
         <View style={shelfStyles.imageContainer}>
           {visuals?.image ? (
-            <Image source={visuals.image} style={shelfStyles.image} resizeMode="contain" />
+            <Image 
+              source={visuals.image} 
+              style={shelfStyles.image} 
+              resizeMode="contain"
+              onError={() => {
+                // Image yüklenemezse sessizce devam et
+              }}
+            />
           ) : visuals?.emojiFallback ? (
             <Text style={shelfStyles.emoji}>{visuals.emojiFallback}</Text>
           ) : (

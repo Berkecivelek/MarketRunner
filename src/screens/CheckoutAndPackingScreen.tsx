@@ -5,8 +5,10 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { getLevelById } from '../data/levels';
 import { buildOrderKey, getProductName, getVariantByKey } from '../data/products';
+import { TutorialOverlay } from '../components/TutorialOverlay';
 import type { RootStackParamList } from '../navigation';
 import { useGame } from '../state/GameContext';
+import { getTutorialStepsForScreen, getTutorialStep, type TutorialStepId } from '../data/tutorialSteps';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Checkout'>;
 
@@ -16,8 +18,51 @@ type Stage = 'scan' | 'pack';
 export const CheckoutAndPackingScreen: React.FC<Props> = ({ navigation, route }) => {
   const { levelId, collectedItems, timeRemaining } = route.params;
   const level = getLevelById(levelId);
-  const { completeLevel } = useGame();
+  const { completeLevel, shouldShowTutorial } = useGame();
   const insets = useSafeAreaInsets();
+  
+  // Tutorial state
+  const [currentTutorialStep, setCurrentTutorialStep] = useState<TutorialStepId | null>(null);
+  const tutorialSteps = getTutorialStepsForScreen('Checkout');
+  
+  useEffect(() => {
+    // Level 1 ve tutorial gösterilmeli ise
+    if (shouldShowTutorial(levelId) && tutorialSteps.length > 0) {
+      // Stage'e göre tutorial adımını belirle
+      setCurrentTutorialStep('CHECKOUT_SCAN');
+    } else {
+      setCurrentTutorialStep(null);
+    }
+  }, [levelId, shouldShowTutorial, tutorialSteps]);
+  
+  // Stage değiştiğinde tutorial adımını güncelle
+  useEffect(() => {
+    if (!shouldShowTutorial(levelId)) return;
+    
+    if (stage === 'scan') {
+      setCurrentTutorialStep('CHECKOUT_SCAN');
+    } else if (stage === 'pack') {
+      setCurrentTutorialStep('CHECKOUT_PACK');
+    }
+  }, [stage, levelId, shouldShowTutorial]);
+  
+  const currentStep = currentTutorialStep 
+    ? getTutorialStep(currentTutorialStep)
+    : null;
+  
+  const handleTutorialNext = () => {
+    if (!currentTutorialStep) return;
+    
+    if (currentTutorialStep === 'CHECKOUT_SCAN' && stage === 'pack') {
+      setCurrentTutorialStep('CHECKOUT_PACK');
+    } else {
+      setCurrentTutorialStep(null);
+    }
+  };
+  
+  const handleTutorialSkip = () => {
+    setCurrentTutorialStep(null);
+  };
 
   const queue = useMemo(() => {
     if (!level) return [];
@@ -186,7 +231,11 @@ export const CheckoutAndPackingScreen: React.FC<Props> = ({ navigation, route })
         ) : null}
       </View>
 
-      <TouchableOpacity style={styles.actionButton} onPress={handleActionPress}>
+      <TouchableOpacity 
+        style={styles.actionButton} 
+        onPress={handleActionPress}
+        testID={stage === 'scan' ? 'scanButton' : 'packButton'}
+      >
         <Text style={styles.actionButtonText}>
           {stage === 'scan' ? 'Kasada Oku (Bip!)' : 'Pakete Yerleştir'}
         </Text>
@@ -201,6 +250,14 @@ export const CheckoutAndPackingScreen: React.FC<Props> = ({ navigation, route })
           </View>
         ))}
       </View>
+      
+      {/* Tutorial Overlay */}
+      <TutorialOverlay
+        visible={shouldShowTutorial(levelId) && currentStep !== null}
+        step={currentStep}
+        onNext={handleTutorialNext}
+        onSkip={handleTutorialSkip}
+      />
     </View>
   );
 };

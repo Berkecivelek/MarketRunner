@@ -258,15 +258,42 @@ const PRODUCT_DEFINITIONS: ProductDefinition[] = [
 ];
 
 const variants: ProductVariant[] = PRODUCT_DEFINITIONS.flatMap((product) => {
-  return [
-    {
+  const variantsList: ProductVariant[] = [];
+  
+  // Eğer product'ın brands'ı varsa, her brand için bir variant oluştur
+  if (product.brands && product.brands.length > 0) {
+    product.brands.forEach((brand) => {
+      variantsList.push({
+        productId: product.id,
+        brandId: brand.id,
+        displayName: `${product.name} (${brand.name})`,
+        color: brand.accentColor || product.baseColor,
+        icon: product.icon,
+        shelfTitle: product.shelfTitle
+      });
+    });
+    // Brand'ları olan ürünler için de default variant ekle (level'lerde brandId belirtilmemiş olabilir)
+    variantsList.push({
       productId: product.id,
+      brandId: undefined,
       displayName: product.name,
       color: product.baseColor,
       icon: product.icon,
       shelfTitle: product.shelfTitle
-    }
-  ];
+    });
+  } else {
+    // Brand yoksa, sadece default variant oluştur
+    variantsList.push({
+      productId: product.id,
+      brandId: undefined,
+      displayName: product.name,
+      color: product.baseColor,
+      icon: product.icon,
+      shelfTitle: product.shelfTitle
+    });
+  }
+  
+  return variantsList;
 });
 
 export const PRODUCT_VARIANTS = variants;
@@ -355,7 +382,8 @@ export const getVariantsForMode = (mode: GameMode): ProductVariant[] => {
           shelfTitle: product.shelfTitle
         }];
       }
-      return brands.map(brand => ({
+      // Brand'ları olan ürünler için hem brand variant'ları hem de default variant oluştur
+      const brandVariants = brands.map(brand => ({
         productId: product.id,
         brandId: brand.id,
         displayName: brand.name,
@@ -364,6 +392,16 @@ export const getVariantsForMode = (mode: GameMode): ProductVariant[] => {
         shelfTitle: product.shelfTitle,
         badgeText: brand.shortCode
       }));
+      // Default variant ekle (level'lerde brandId belirtilmemiş olabilir)
+      brandVariants.push({
+        productId: product.id,
+        brandId: undefined,
+        displayName: product.name,
+        color: product.baseColor,
+        icon: product.icon,
+        shelfTitle: product.shelfTitle
+      });
+      return brandVariants;
     }
 
     if (product.brands && product.brands.length > 0) {

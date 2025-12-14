@@ -13,25 +13,25 @@ export const CartoonProduct: React.FC<CartoonProductProps> = ({ id, scale = 1 })
     // 1. MANAV (Produce)
     if (pid.includes('apple')) return <View style={p.apple}><View style={p.appleShine} /><View style={p.appleStem} /><View style={p.appleLeaf} /></View>;
     if (pid.includes('banana')) return <View style={p.banana}><View style={p.bananaCurve} /><View style={p.bananaStem} /></View>;
-    if (pid.includes('tomato')) return <View style={p.tomato}><View style={p.tomatoShine} /><View style={p.tomatoLeaf} /></View>;
+    if (pid.includes('tomato') && !pid.includes('paste')) return <View style={p.tomato}><View style={p.tomatoShine} /><View style={p.tomatoLeaf} /></View>;
     if (pid.includes('lettuce')) return <View style={p.lettuce}><View style={p.lettuceInner} /></View>;
     if (pid.includes('cucumber')) return <View style={p.cucumber}><View style={p.cucumberSpot1} /><View style={p.cucumberSpot2} /></View>;
     if (pid.includes('strawberry')) return <View style={p.strawberry}><View style={p.seed1} /><View style={p.seed2} /><View style={p.seed3} /><View style={p.berryLeaf} /></View>;
-    if (pid.includes('lemon')) return <View style={p.lemon}><View style={p.lemonEnd1} /><View style={p.lemonEnd2} /></View>;
-    if (pid.includes('orange') && !pid.includes('juice')) return <View style={p.orange}><View style={p.orangePore} /></View>;
+    if (pid.includes('lemon') && !pid.includes('ade')) return <View style={p.lemon}><View style={p.lemonEnd1} /><View style={p.lemonEnd2} /></View>;
+    if (pid.includes('orange') && !pid.includes('juice') && !pid.includes('orange-juice')) return <View style={p.orange}><View style={p.orangePore} /></View>;
     if (pid.includes('carrot')) return <View style={p.carrot}><View style={p.carrotLine1} /><View style={p.carrotLine2} /><View style={p.carrotLeaf} /></View>;
     if (pid.includes('eggplant')) return <View style={p.eggplant}><View style={p.eggplantLeaf} /></View>;
     if (pid.includes('pepper')) return <View style={p.pepper}><View style={p.pepperStem} /></View>;
     if (pid.includes('watermelon')) return <View style={p.watermelon}><View style={p.melonStripe1} /><View style={p.melonStripe2} /></View>;
 
     // 2. SÜT & KAHVALTI (Dairy)
-    if (pid.includes('milk')) return <View style={p.milkBottle}><View style={p.milkCap} /><View style={p.milkLabel}><Text style={p.tinyText}>SÜT</Text></View></View>;
+    if (pid.includes('milk') && !pid.includes('shake')) return <View style={p.milkBottle}><View style={p.milkCap} /><View style={p.milkLabel}><Text style={p.tinyText}>SÜT</Text></View></View>;
     if (pid.includes('cheesewheel')) return <View style={p.cheeseWheel}><View style={p.cheeseWedge}/></View>;
     if (pid.includes('cheese') && !pid.includes('wheel')) return <View style={p.cheese}><View style={p.cheeseHole1} /><View style={p.cheeseHole2} /></View>;
     if (pid.includes('yogurt')) return <View style={p.yogurtCup}><View style={p.yogurtRim} /><View style={p.yogurtLabel} /></View>;
     if (pid.includes('egg')) return <View style={p.eggBox}><View style={p.egg1} /><View style={p.egg2} /><View style={p.egg3} /></View>;
     if (pid.includes('butter')) return <View style={p.butterBlock}><View style={p.butterLabel} /></View>;
-    if (pid.includes('cream')) return <View style={p.creamCarton}><View style={p.creamDrop} /></View>;
+    if (pid.includes('cream') && !pid.includes('ice')) return <View style={p.creamCarton}><View style={p.creamDrop} /></View>;
     if (pid.includes('ice-cream')) return <View style={p.iceCream}><View style={p.scoop} /><View style={p.cone} /></View>;
     if (pid.includes('ayran')) return <View style={p.ayranCup}><Text style={p.tinyTextBlue}>AYRAN</Text></View>;
     if (pid.includes('pudding')) return <View style={p.puddingBowl}><View style={p.puddingContent}/></View>;
@@ -54,14 +54,14 @@ export const CartoonProduct: React.FC<CartoonProductProps> = ({ id, scale = 1 })
 
     // 4. İÇECEKLER (Drinks)
     if (pid.includes('cola')) return <View style={p.colaCan}><View style={p.colaStripe} /><Text style={p.tinyTextWhite}>COLA</Text></View>;
-    if (pid.includes('water')) return <View style={p.waterBottle}><View style={p.waterCap} /><View style={p.waterLabel} /></View>;
+    if (pid.includes('water') && !pid.includes('melon')) return <View style={p.waterBottle}><View style={p.waterCap} /><View style={p.waterLabel} /></View>;
     if (pid.includes('fruit-juice')) return <View style={p.juiceCarton}><View style={p.juiceOrange} /><View style={p.straw} /></View>;
     if (pid.includes('tea') && !pid.includes('ice')) return <View style={p.teaCup}><View style={p.teaTag} /></View>;
     if (pid.includes('coffee')) return <View style={p.coffeeCup}><View style={p.coffeeSleeve} /><View style={p.steam} /></View>;
     if (pid.includes('lemonade')) return <View style={p.lemonade}><View style={p.lemonSlice} /><View style={p.straw} /></View>;
     if (pid.includes('milkshake')) return <View style={p.milkshake}><View style={p.cherry} /><View style={p.straw} /></View>;
     if (pid.includes('soda')) return <View style={p.sodaBottle}><Text style={p.tinyTextWhite}>SODA</Text></View>;
-    if (pid.includes('orangejuice')) return <View style={p.ojBottle}><View style={p.ojCap}/></View>;
+    if (pid.includes('orangejuice') || pid.includes('orange-juice')) return <View style={p.ojBottle}><View style={p.ojCap}/></View>;
     if (pid.includes('energydrink')) return <View style={p.energyCan}><View style={p.bolt}/></View>;
     if (pid.includes('hotchoco')) return <View style={p.hotChoco}><View style={p.steam}/></View>;
     if (pid.includes('icetea')) return <View style={p.iceTeaCan}><Text style={p.tinyTextWhite}>ICE</Text></View>;
@@ -93,6 +93,34 @@ export const CartoonProduct: React.FC<CartoonProductProps> = ({ id, scale = 1 })
     if (pid.includes('speaker')) return <View style={p.speaker}><View style={p.speakerMesh}/></View>;
     if (pid.includes('charger')) return <View style={p.charger}><View style={p.cable}/></View>;
     if (pid.includes('usb')) return <View style={p.usb}><View style={p.usbMetal}/></View>;
+
+    // 7. TEMEL GIDA (Staples)
+    if (pid.includes('pasta')) return <View style={p.pastaBag}><View style={p.pastaWindow}/><Text style={p.tinyText}>MAKARNA</Text></View>;
+    if (pid.includes('rice')) return <View style={p.riceBag}><Text style={p.tinyText}>PİRİNÇ</Text></View>;
+    if (pid.includes('lentil')) return <View style={p.lentilBag}><Text style={p.tinyTextWhite}>MERCİMEK</Text></View>;
+    if (pid.includes('flour')) return <View style={p.flourBag}><Text style={p.tinyTextDark}>UN</Text></View>;
+    if (pid.includes('sugar_bag')) return <View style={p.sugarBag}><Text style={p.tinyTextDark}>ŞEKER</Text></View>;
+    if (pid.includes('salt')) return <View style={p.saltShaker}><Text style={p.tinyTextDark}>TUZ</Text></View>;
+    if (pid.includes('oil')) return <View style={p.oilBottle}><View style={p.oilLabel}/></View>;
+    if (pid.includes('tomato_paste')) return <View style={p.tomatoPaste}><Text style={p.tinyTextWhite}>SALÇA</Text></View>;
+    if (pid.includes('canned_food')) return <View style={p.cannedFood}><View style={p.canLabel}/></View>;
+    if (pid.includes('bulgur')) return <View style={p.bulgurBag}><Text style={p.tinyTextDark}>BULGUR</Text></View>;
+    if (pid.includes('semolina')) return <View style={p.semolinaBag}><Text style={p.tinyTextDark}>İRMİK</Text></View>;
+    if (pid.includes('chickpea')) return <View style={p.chickpeaBag}><Text style={p.tinyTextDark}>NOHUT</Text></View>;
+
+    // 8. ET & TAVUK (Meat)
+    if (pid.includes('chicken')) return <View style={p.chickenWhole}><View style={p.chickenLeg1}/><View style={p.chickenLeg2}/></View>;
+    if (pid.includes('minced_meat')) return <View style={p.mincedMeat}><View style={p.meatTexture}/></View>;
+    if (pid.includes('steak')) return <View style={p.steak}><View style={p.steakFat}/></View>;
+    if (pid.includes('sausage')) return <View style={p.sausagePack}><View style={p.sausageLink1}/><View style={p.sausageLink2}/></View>;
+    if (pid.includes('salami')) return <View style={p.salami}><View style={p.salamiSpot1}/><View style={p.salamiSpot2}/></View>;
+    if (pid.includes('sujuk')) return <View style={p.sujuk}><View style={p.sujukKnot}/></View>;
+    if (pid.includes('meatball')) return <View style={p.meatballPack}><View style={p.meatball1}/><View style={p.meatball2}/><View style={p.meatball3}/></View>;
+    if (pid.includes('wings')) return <View style={p.wingsPack}><View style={p.wing1}/><View style={p.wing2}/></View>;
+    if (pid.includes('drumstick')) return <View style={p.drumstickPack}><View style={p.drumstick1}/><View style={p.drumstick2}/></View>;
+    if (pid.includes('fish')) return <View style={p.fish}><View style={p.fishEye}/><View style={p.fishTail}/></View>;
+    if (pid.includes('pastrami')) return <View style={p.pastrami}><View style={p.pastramiFat}/></View>;
+    if (pid.includes('nugget')) return <View style={p.nuggetPack}><View style={p.nugget1}/><View style={p.nugget2}/><View style={p.nugget3}/></View>;
 
     // Fallback
     return <View style={p.genericBox}><Text style={{fontSize:20}}>📦</Text></View>;
@@ -303,5 +331,57 @@ const p = StyleSheet.create({
     cable: { position: 'absolute', right: -10, top: 10, width: 20, height: 4, backgroundColor: '#CCC' },
     usb: { width: 15, height: 30, backgroundColor: '#1976D2', borderRadius: 2 },
     usbMetal: { width: 15, height: 10, backgroundColor: '#B0BEC5', marginTop: -10 },
-});
 
+    // STAPLES
+    pastaBag: { width: 35, height: 45, backgroundColor: '#FFCC80', borderRadius: 4, borderWidth: 2, borderColor: '#E65100', alignItems: 'center', justifyContent: 'center' },
+    pastaWindow: { width: 20, height: 15, backgroundColor: '#FFF8E1', marginBottom: 5, borderRadius: 2 },
+    riceBag: { width: 35, height: 45, backgroundColor: '#EEEEEE', borderRadius: 8, borderWidth: 2, borderColor: '#9E9E9E', alignItems: 'center', justifyContent: 'center' },
+    lentilBag: { width: 35, height: 40, backgroundColor: '#D32F2F', borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
+    flourBag: { width: 40, height: 45, backgroundColor: '#FFF', borderRadius: 4, borderWidth: 2, borderColor: '#BDBDBD', alignItems: 'center', justifyContent: 'center' },
+    sugarBag: { width: 35, height: 40, backgroundColor: '#F5F5F5', borderRadius: 4, borderWidth: 2, borderColor: '#E0E0E0', alignItems: 'center', justifyContent: 'center' },
+    saltShaker: { width: 25, height: 40, backgroundColor: '#FFF', borderRadius: 4, borderWidth: 2, borderColor: '#90A4AE', alignItems: 'center', justifyContent: 'center' },
+    oilBottle: { width: 25, height: 50, backgroundColor: '#FFF9C4', borderRadius: 8, borderWidth: 2, borderColor: '#FBC02D', alignItems: 'center' },
+    oilLabel: { width: 20, height: 15, backgroundColor: '#FFF59D', marginTop: 15, borderWidth: 1, borderColor: '#FBC02D' },
+    tomatoPaste: { width: 30, height: 35, backgroundColor: '#C62828', borderRadius: 4, borderWidth: 2, borderColor: '#B71C1C', alignItems: 'center', justifyContent: 'center' },
+    cannedFood: { width: 30, height: 35, backgroundColor: '#90A4AE', borderRadius: 4, borderWidth: 2, borderColor: '#546E7A', alignItems: 'center', justifyContent: 'center' },
+    canLabel: { width: 26, height: 15, backgroundColor: '#81C784' },
+    bulgurBag: { width: 35, height: 40, backgroundColor: '#FFE0B2', borderRadius: 6, borderWidth: 2, borderColor: '#FFB74D', alignItems: 'center', justifyContent: 'center' },
+    semolinaBag: { width: 35, height: 40, backgroundColor: '#FFF3E0', borderRadius: 6, borderWidth: 2, borderColor: '#FFE0B2', alignItems: 'center', justifyContent: 'center' },
+    chickpeaBag: { width: 35, height: 40, backgroundColor: '#FFF9C4', borderRadius: 8, borderWidth: 2, borderColor: '#FBC02D', alignItems: 'center', justifyContent: 'center' },
+
+    // MEAT
+    chickenWhole: { width: 45, height: 35, backgroundColor: '#FFE0B2', borderRadius: 10, borderWidth: 2, borderColor: '#FFB74D' },
+    chickenLeg1: { position: 'absolute', left: -5, bottom: 0, width: 10, height: 15, backgroundColor: '#FFE0B2', borderRadius: 5, borderWidth: 2, borderColor: '#FFB74D' },
+    chickenLeg2: { position: 'absolute', right: -5, bottom: 0, width: 10, height: 15, backgroundColor: '#FFE0B2', borderRadius: 5, borderWidth: 2, borderColor: '#FFB74D' },
+    mincedMeat: { width: 40, height: 30, backgroundColor: '#EF5350', borderRadius: 5, borderWidth: 2, borderColor: '#C62828', overflow: 'hidden' },
+    meatTexture: { position: 'absolute', top: 5, left: 5, width: 30, height: 20, backgroundColor: '#E57373', borderRadius: 5 },
+    steak: { width: 45, height: 30, backgroundColor: '#B71C1C', borderRadius: 10, borderWidth: 2, borderColor: '#880E4F' },
+    steakFat: { position: 'absolute', top: 5, right: 10, width: 5, height: 15, backgroundColor: '#FFCDD2', transform: [{rotate: '20deg'}] },
+    sausagePack: { width: 40, height: 30, flexDirection: 'row', justifyContent: 'center', alignItems: 'center' },
+    sausageLink1: { width: 10, height: 30, backgroundColor: '#D32F2F', borderRadius: 5, marginRight: 2 },
+    sausageLink2: { width: 10, height: 30, backgroundColor: '#D32F2F', borderRadius: 5 },
+    salami: { width: 35, height: 35, backgroundColor: '#E57373', borderRadius: 17.5, borderWidth: 2, borderColor: '#C62828' },
+    salamiSpot1: { position: 'absolute', top: 10, left: 10, width: 4, height: 4, backgroundColor: '#FFCDD2', borderRadius: 2 },
+    salamiSpot2: { position: 'absolute', bottom: 8, right: 10, width: 5, height: 5, backgroundColor: '#FFCDD2', borderRadius: 2.5 },
+    sujuk: { width: 40, height: 25, backgroundColor: '#880E4F', borderRadius: 12.5, borderWidth: 2, borderColor: '#4A148C', transform: [{rotate: '-10deg'}] },
+    sujukKnot: { position: 'absolute', left: -2, top: 8, width: 4, height: 8, backgroundColor: '#F5F5F5' },
+    meatballPack: { width: 40, height: 30, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center' },
+    meatball1: { width: 12, height: 12, backgroundColor: '#795548', borderRadius: 6, margin: 1 },
+    meatball2: { width: 12, height: 12, backgroundColor: '#795548', borderRadius: 6, margin: 1 },
+    meatball3: { width: 12, height: 12, backgroundColor: '#795548', borderRadius: 6, margin: 1 },
+    wingsPack: { width: 40, height: 30, backgroundColor: '#FFF3E0', borderRadius: 5, borderWidth: 2, borderColor: '#FFB74D', flexDirection: 'row', alignItems: 'center', justifyContent: 'center' },
+    wing1: { width: 15, height: 20, backgroundColor: '#FFCC80', borderRadius: 5, marginRight: 2 },
+    wing2: { width: 15, height: 20, backgroundColor: '#FFCC80', borderRadius: 5 },
+    drumstickPack: { width: 40, height: 35, backgroundColor: 'transparent', flexDirection: 'row', justifyContent: 'center' },
+    drumstick1: { width: 12, height: 30, backgroundColor: '#FFE0B2', borderRadius: 6, borderWidth: 1, borderColor: '#FFB74D', marginRight: 2, transform: [{rotate: '-10deg'}] },
+    drumstick2: { width: 12, height: 30, backgroundColor: '#FFE0B2', borderRadius: 6, borderWidth: 1, borderColor: '#FFB74D', transform: [{rotate: '10deg'}] },
+    fish: { width: 50, height: 20, backgroundColor: '#90CAF9', borderRadius: 10, borderWidth: 2, borderColor: '#1E88E5' },
+    fishEye: { position: 'absolute', top: 5, right: 10, width: 4, height: 4, backgroundColor: '#000', borderRadius: 2 },
+    fishTail: { position: 'absolute', left: -5, top: 2, width: 10, height: 16, backgroundColor: '#90CAF9', borderRightWidth: 2, borderColor: '#1E88E5' },
+    pastrami: { width: 45, height: 25, backgroundColor: '#B71C1C', borderRadius: 4, borderWidth: 2, borderColor: '#880E4F' },
+    pastramiFat: { position: 'absolute', top: 0, width: '100%', height: 5, backgroundColor: '#FFCDD2', opacity: 0.5 },
+    nuggetPack: { width: 40, height: 30, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center' },
+    nugget1: { width: 12, height: 10, backgroundColor: '#FFECB3', borderRadius: 4, margin: 1, borderWidth: 1, borderColor: '#FFC107' },
+    nugget2: { width: 12, height: 10, backgroundColor: '#FFECB3', borderRadius: 4, margin: 1, borderWidth: 1, borderColor: '#FFC107' },
+    nugget3: { width: 12, height: 10, backgroundColor: '#FFECB3', borderRadius: 4, margin: 1, borderWidth: 1, borderColor: '#FFC107' },
+});

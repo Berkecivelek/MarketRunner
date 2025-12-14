@@ -169,3 +169,4 @@ export function getProductEnglishName(productId: string): string {
   return productId.charAt(0).toUpperCase() + productId.slice(1).toLowerCase();
 }
 
+

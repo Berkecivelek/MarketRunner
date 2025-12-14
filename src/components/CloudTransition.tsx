@@ -10,9 +10,18 @@ interface CloudTransitionProps {
 
 export const CloudTransition: React.FC<CloudTransitionProps> = ({ visible, onTransitionEnd }) => {
   const anim = useRef(new Animated.Value(0)).current;
+  const onTransitionEndRef = useRef(onTransitionEnd);
+
+  // onTransitionEnd callback'ini ref'te sakla
+  useEffect(() => {
+    onTransitionEndRef.current = onTransitionEnd;
+  }, [onTransitionEnd]);
 
   useEffect(() => {
     if (visible) {
+      // Animasyonu sıfırla
+      anim.setValue(0);
+      
       Animated.sequence([
         Animated.timing(anim, {
           toValue: 1,
@@ -24,11 +33,16 @@ export const CloudTransition: React.FC<CloudTransitionProps> = ({ visible, onTra
           duration: 800,
           useNativeDriver: true
         })
-      ]).start(() => {
-        onTransitionEnd();
+      ]).start((finished) => {
+        if (finished) {
+          onTransitionEndRef.current();
+        }
       });
+    } else {
+      // Visible false olduğunda animasyonu sıfırla
+      anim.setValue(0);
     }
-  }, [visible]);
+  }, [visible, anim]);
 
   if (!visible) return null;
 

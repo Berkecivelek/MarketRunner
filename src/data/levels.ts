@@ -52,7 +52,7 @@ const tutorialLevels: LevelConfig[] = [
       { productId: 'milk', quantity: 1 },
       { productId: 'bread', quantity: 1 },
       { productId: 'apple', quantity: 2 },
-      { productId: 'orange-juice', quantity: 1 }
+      { productId: 'water', quantity: 1 }
     ],
     reward: { xp: 40, coins: 25 },
     tutorialTips: [
@@ -67,8 +67,8 @@ const tutorialLevels: LevelConfig[] = [
       { productId: 'milk', quantity: 1 },
       { productId: 'bread', quantity: 1 },
       { productId: 'apple', quantity: 2 },
-      { productId: 'orange-juice', quantity: 1 },
-      { productId: 'cookies', quantity: 1 }
+      { productId: 'banana', quantity: 1 },
+      { productId: 'cheese', quantity: 1 }
     ],
     reward: { xp: 50, coins: 30 },
     tutorialTips: [
@@ -96,8 +96,8 @@ const walkInLevels: LevelConfig[] = [
     orderItems: [
       { productId: 'yogurt', quantity: 2 },
       { productId: 'apple', quantity: 2 },
-      { productId: 'orange-juice', quantity: 1 },
-      { productId: 'cookies', quantity: 1 }
+      { productId: 'water', quantity: 1 },
+      { productId: 'pasta', quantity: 1 }
     ],
     reward: { xp: 60, coins: 35 }
   },
@@ -134,8 +134,8 @@ const walkInLevels: LevelConfig[] = [
     orderItems: [
       { productId: 'milk', quantity: 2 },
       { productId: 'yogurt', quantity: 2 },
-      { productId: 'orange-juice', quantity: 2 },
-      { productId: 'cookies', quantity: 2 },
+      { productId: 'water', quantity: 2 },
+      { productId: 'pasta', quantity: 2 },
       { productId: 'chips', quantity: 2 }
     ],
     reward: { xp: 75, coins: 46 }
@@ -150,7 +150,7 @@ const brandFocusedLevels: LevelConfig[] = [
     orderItems: [
       { productId: 'milk', quantity: 2 },
       { productId: 'bread', quantity: 2 },
-      { productId: 'orange-juice', quantity: 1 },
+      { productId: 'water', quantity: 1 },
       { productId: 'chips', quantity: 1 }
     ],
     reward: { xp: 80, coins: 50 }
@@ -174,8 +174,8 @@ const brandFocusedLevels: LevelConfig[] = [
     timeLimit: 75,
     orderItems: [
       { productId: 'milk', quantity: 2 },
-      { productId: 'orange-juice', quantity: 2 },
-      { productId: 'cereal', quantity: 1 },
+      { productId: 'water', quantity: 2 },
+      { productId: 'banana', quantity: 1 },
       { productId: 'coffee', quantity: 1 },
       { productId: 'ice-cream', quantity: 2 }
     ],
@@ -188,10 +188,10 @@ const brandFocusedLevels: LevelConfig[] = [
     orderItems: [
       { productId: 'milk', quantity: 1 },
       { productId: 'bread', quantity: 1 },
-      { productId: 'cereal', quantity: 2 },
+      { productId: 'banana', quantity: 2 },
       { productId: 'chips', quantity: 2 },
       { productId: 'soda', quantity: 2 },
-      { productId: 'cookies', quantity: 2 }
+      { productId: 'pasta', quantity: 2 }
     ],
     reward: { xp: 95, coins: 60 }
   },
@@ -219,7 +219,7 @@ const onlineLevels: LevelConfig[] = [
     timeLimit: 65,
     orderItems: [
       { productId: 'milk', quantity: 2 },
-      { productId: 'cereal', quantity: 2 },
+      { productId: 'pasta', quantity: 2 },
       { productId: 'banana', quantity: 3 },
       { productId: 'coffee', quantity: 1 },
       { productId: 'water', quantity: 3 }
@@ -232,11 +232,11 @@ const onlineLevels: LevelConfig[] = [
     timeLimit: 60,
     orderItems: [
       { productId: 'milk', quantity: 2 },
-      { productId: 'cereal', quantity: 2 },
+      { productId: 'pasta', quantity: 2 },
       { productId: 'chips', quantity: 2 },
-      { productId: 'orange-juice', quantity: 2 },
-      { productId: 'cookies', quantity: 2 },
-      { productId: 'cleaner', quantity: 1 }
+      { productId: 'water', quantity: 2 },
+      { productId: 'banana', quantity: 2 },
+      { productId: 'cheese', quantity: 1 }
     ],
     reward: { xp: 125, coins: 80 }
   },
@@ -260,11 +260,11 @@ const onlineLevels: LevelConfig[] = [
     timeLimit: 55,
     orderItems: [
       { productId: 'milk', quantity: 3 },
-      { productId: 'cereal', quantity: 2 },
+      { productId: 'banana', quantity: 2 },
       { productId: 'coffee', quantity: 2 },
       { productId: 'chips', quantity: 2 },
-      { productId: 'orange-juice', quantity: 2 },
-      { productId: 'cookies', quantity: 3 }
+      { productId: 'water', quantity: 2 },
+      { productId: 'pasta', quantity: 3 }
     ],
     reward: { xp: 140, coins: 90 }
   },
@@ -279,7 +279,7 @@ const onlineLevels: LevelConfig[] = [
       { productId: 'ice-cream', quantity: 2 },
       { productId: 'coffee', quantity: 2 },
       { productId: 'tea', quantity: 2 },
-      { productId: 'cleaner', quantity: 1 }
+      { productId: 'cheese', quantity: 1 }
     ],
     reward: { xp: 160, coins: 110 }
   }

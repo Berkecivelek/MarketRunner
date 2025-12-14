@@ -88,14 +88,25 @@ export const SceneView: React.FC<SceneViewProps> = ({ shelves, onProductSelect, 
   useFocusEffect(
     useCallback(() => {
       const lockLandscape = async () => {
-          await ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE);
-          setOrientationLocked(true);
+          try {
+            await ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE);
+            setOrientationLocked(true);
+          } catch (error) {
+            // ScreenOrientation yüklenemezse sessizce devam et
+            console.warn('Failed to lock orientation:', error);
+          }
       };
       lockLandscape();
       soundManager.playMusic('market_theme');
 
       return () => {
-          ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
+          try {
+            ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP).catch(() => {
+              // Sessizce devam et
+            });
+          } catch (error) {
+            // Sessizce devam et
+          }
           soundManager.stopMusic();
       };
     }, [])

@@ -1,9 +1,7 @@
-import React, { useCallback, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { useFocusEffect } from '@react-navigation/native';
-import * as ScreenOrientation from 'expo-screen-orientation';
 
 import { useGame } from '../state/GameContext';
 import type { RootStackParamList } from '../navigation';
@@ -50,15 +48,6 @@ export const MarketUpgradeScreen: React.FC<Props> = ({ navigation }) => {
   const insets = useSafeAreaInsets();
 
   const tiers = useMemo(() => UPGRADE_TIERS, []);
-
-  useFocusEffect(
-    useCallback(() => {
-      const lockPortrait = async () => {
-        await ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
-      };
-      lockPortrait();
-    }, [])
-  );
 
   return (
     <ScrollView
@@ -184,3 +173,4 @@ const styles = StyleSheet.create({
     color: '#F87171'
   }
 });
+

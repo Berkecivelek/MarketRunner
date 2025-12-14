@@ -2,18 +2,29 @@
   "expo": {
     "name": "Market Runner",
     "slug": "market-runner",
-    "version": "0.1.0",
+    "version": "1.0.0",
     "orientation": "default",
     "icon": "./assets/icon.png",
     "scheme": "marketrunner",
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#0A0A23"
+      "backgroundColor": "#FFFFFF"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "privacy": "public",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.berkecivelek.marketrunner",
+      "buildNumber": "4",
+      "infoPlist": {
+        "NSUserTrackingUsageDescription": "Bu uygulama kullanıcı takibi yapmaz.",
+        "NSCameraUsageDescription": "Bu uygulama kamera erişimi gerektirmez.",
+        "NSPhotoLibraryUsageDescription": "Bu uygulama fotoğraf kütüphanesi erişimi gerektirmez.",
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -24,7 +35,14 @@
     "web": {
       "bundler": "metro",
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "958f8cd4-b1bd-4e87-8ae6-ed49e0e640b6"
+      }
+    },
+    "plugins": [
+      "expo-asset"
+    ]
   }
 }
-

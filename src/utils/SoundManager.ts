@@ -1,6 +1,22 @@
-import { Audio } from 'expo-av';
-import * as Speech from 'expo-speech';
 import { getProductEnglishName } from './productEnglishNames';
+
+// expo-av ve expo-speech'i güvenli şekilde import et (production build'de native module hatası olabilir)
+let Audio: typeof import('expo-av').Audio | null = null;
+let Speech: typeof import('expo-speech') | null = null;
+
+try {
+  const expoAv = require('expo-av');
+  Audio = expoAv.Audio;
+} catch (error) {
+  console.warn('expo-av could not be loaded:', error);
+}
+
+try {
+  Speech = require('expo-speech');
+} catch (error) {
+  // expo-speech yüklenemezse sessizce devam et
+  console.warn('expo-speech could not be loaded:', error);
+}
 
 type SfxType = 'step' | 'pop' | 'correct' | 'wrong' | 'victory' | 'click' | 'collect';
 type MusicType = 'market_theme';
@@ -16,8 +32,8 @@ const SOUND_URLS = {
 
 class SoundManager {
   private static instance: SoundManager;
-  private soundObjects: Record<string, Audio.Sound> = {};
-  private musicObject: Audio.Sound | null = null;
+  private soundObjects: Record<string, any> = {};
+  private musicObject: any = null;
   private isMusicEnabled: boolean = true;
   private isSfxEnabled: boolean = true;
   private lastSpokenProduct: string | null = null;
@@ -41,15 +57,27 @@ class SoundManager {
     this.isSfxEnabled = sfx;
 
     if (!music && this.musicObject) {
-      this.musicObject.stopAsync();
+      try {
+        this.musicObject.stopAsync().catch(() => {
+          // Sessizce devam et
+        });
+      } catch (error) {
+        // Sessizce devam et
+      }
     } else if (music && this.musicObject) {
-      this.musicObject.playAsync();
+      try {
+        this.musicObject.playAsync().catch(() => {
+          // Sessizce devam et
+        });
+      } catch (error) {
+        // Sessizce devam et
+      }
     }
   }
 
   // --- SFX ---
   public async playSfx(type: SfxType) {
-    if (!this.isSfxEnabled) return;
+    if (!this.isSfxEnabled || !Audio) return;
 
     try {
       let url = '';
@@ -83,7 +111,7 @@ class SoundManager {
 
   // --- MUSIC ---
   public async playMusic(type: MusicType) {
-    if (this.musicObject) return; // Already playing/loaded
+    if (this.musicObject || !Audio) return; // Already playing/loaded or Audio not available
 
     try {
       const url = SOUND_URLS.market_theme;
@@ -117,6 +145,11 @@ class SoundManager {
 
   // --- TEXT-TO-SPEECH (Çocuksu Seslendirme) ---
   public speakProductName(productId: string) {
+    // expo-speech yüklenememişse sessizce çık
+    if (!Speech) {
+      return;
+    }
+
     if (!this.isSfxEnabled) return;
 
     // ProductId'yi normalize et (küçük harfe çevir)
@@ -168,7 +201,9 @@ class SoundManager {
 
     try {
       // Önce mevcut konuşmayı durdur
-      Speech.stop();
+      if (Speech && Speech.stop) {
+        Speech.stop();
+      }
       
       // Ürün adını İngilizce'ye çevir
       const englishName = getProductEnglishName(productId);
@@ -178,36 +213,39 @@ class SoundManager {
       
       // Çocuksu, çizgi film karakteri gibi bir ses için ayarlar
       // iOS'ta daha çocuksu sesler için pitch'i yükseltiyoruz
-      Speech.speak(englishName, {
-        language: 'en-US',
-        pitch: 1.4, // Daha yüksek pitch = daha çocuksu, çizgi film karakteri gibi ses
-        rate: 0.8, // Biraz daha yavaş = daha anlaşılır ve çocuksu
-        volume: 1.0,
-        onDone: () => {
-          // Konuşma bittiğinde - TÜM FLAG'LERİ SIFIRLA
-          clearTimeout(safetyTimeout);
-          this.isSpeaking = false;
-          this.speakingLock = false;
-          this.currentSpeakingProduct = null;
-        },
-        onStopped: () => {
-          // Konuşma durdurulduğunda - TÜM FLAG'LERİ SIFIRLA
-          clearTimeout(safetyTimeout);
-          this.isSpeaking = false;
-          this.speakingLock = false;
-          this.currentSpeakingProduct = null;
-        },
-        onError: (error) => {
-          // Hata durumunda sessizce devam et - TÜM FLAG'LERİ SIFIRLA
-          clearTimeout(safetyTimeout);
-          this.isSpeaking = false;
-          this.speakingLock = false;
-          this.currentSpeakingProduct = null;
-          // console.warn('TTS Error:', error);
-        }
-      });
+      if (Speech && Speech.speak) {
+        Speech.speak(englishName, {
+          language: 'en-US',
+          pitch: 1.4, // Daha yüksek pitch = daha çocuksu, çizgi film karakteri gibi ses
+          rate: 0.8, // Biraz daha yavaş = daha anlaşılır ve çocuksu
+          volume: 1.0,
+          onDone: () => {
+            // Konuşma bittiğinde - TÜM FLAG'LERİ SIFIRLA
+            clearTimeout(safetyTimeout);
+            this.isSpeaking = false;
+            this.speakingLock = false;
+            this.currentSpeakingProduct = null;
+          },
+          onStopped: () => {
+            // Konuşma durdurulduğunda - TÜM FLAG'LERİ SIFIRLA
+            clearTimeout(safetyTimeout);
+            this.isSpeaking = false;
+            this.speakingLock = false;
+            this.currentSpeakingProduct = null;
+          },
+          onError: (error) => {
+            // Hata durumunda sessizce devam et - TÜM FLAG'LERİ SIFIRLA
+            clearTimeout(safetyTimeout);
+            this.isSpeaking = false;
+            this.speakingLock = false;
+            this.currentSpeakingProduct = null;
+            // console.warn('TTS Error:', error);
+          }
+        });
+      }
     } catch (error) {
       // TTS kullanılamazsa sessizce devam et - TÜM FLAG'LERİ SIFIRLA
+      clearTimeout(safetyTimeout);
       this.isSpeaking = false;
       this.speakingLock = false;
       this.currentSpeakingProduct = null;

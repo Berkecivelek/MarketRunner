@@ -1,5 +1,5 @@
 import React from 'react';
-import { FlatList, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View, Dimensions } from 'react-native';
+import { Dimensions, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { COLORS } from '../theme/colors';
 import { ShelfProductCard } from './ProductCard';
 import type { ShelfDefinition } from '../data/products';
@@ -17,7 +17,7 @@ interface ShelfViewProps {
   wrongSelectionKey?: string | null;
   showTitle?: boolean;
   interactionDisabled?: boolean;
-  hidePlanks?: boolean; // Bu artık kullanılmayacak ama backward compatibility için tutuyoruz
+  hidePlanks?: boolean;
 }
 
 export const ShelfView: React.FC<ShelfViewProps> = ({
@@ -32,12 +32,11 @@ export const ShelfView: React.FC<ShelfViewProps> = ({
   interactionDisabled = false,
   hidePlanks = false
 }) => {
+  // Tüm reyonlar için mevcut horizontal scroll tasarımı
   return (
     <View style={styles.container}>
       {showTitle ? <Text style={styles.title}>{shelf.title}</Text> : null}
       
-      {/* Raf arka planı (çizgiler) tamamen kaldırıldı. */}
-
       <ScrollView 
         horizontal 
         showsHorizontalScrollIndicator={false}
@@ -45,10 +44,27 @@ export const ShelfView: React.FC<ShelfViewProps> = ({
       >
         {shelf.variants.map((item) => {
           const key = buildOrderKey(item.productId, item.brandId);
-          const required = requiredMap[key] ?? 0;
-          const collected = collectedMap[key] ?? 0;
-          const disabled = disabledKeys?.has(key) ?? false;
-          const highlight = highlightKeys?.has(key) ?? false;
+          
+          // ÖNEMLİ: Brand'ları olan ürünler için genel kontrol
+          // Eğer brand variant görünüyorsa ama requiredMap'te default variant varsa, default variant'ı kullan
+          let required = requiredMap[key] ?? 0;
+          let collected = collectedMap[key] ?? 0;
+          let actualKey = key; // Tıklanınca kullanılacak key
+          
+          // Eğer bu variant'ta required yoksa ama default variant'ta varsa, default variant'ı kullan
+          if (required === 0) {
+            const defaultKey = `${item.productId}__default`;
+            const defaultRequired = requiredMap[defaultKey] ?? 0;
+            if (defaultRequired > 0) {
+              // Bu variant için required ve collected değerlerini default variant'tan al
+              required = defaultRequired;
+              collected = collectedMap[defaultKey] ?? 0;
+              actualKey = defaultKey; // Tıklanınca default key'i kullan
+            }
+          }
+          
+          const disabled = disabledKeys?.has(actualKey) ?? false;
+          const highlight = highlightKeys?.has(actualKey) ?? false;
 
           return (
             <View key={key} style={styles.productWrapper}>
@@ -63,7 +79,7 @@ export const ShelfView: React.FC<ShelfViewProps> = ({
                 onPress={
                   interactionDisabled
                     ? undefined
-                    : () => onSelect(key)
+                    : () => onSelect(actualKey)
                 }
               />
             </View>
@@ -78,7 +94,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     width: '100%',
-    justifyContent: 'center', // Dikey ortala
+    justifyContent: 'center',
     paddingVertical: 20,
   },
   title: {
@@ -91,15 +107,15 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 2,
   },
-  // shelfBackground ve shelfPlank stilleri kaldırıldı.
+  // Horizontal scroll için stiller
   productsContainer: {
     paddingHorizontal: 20,
-    alignItems: 'center', // Ürünleri raf hizasında tut
+    alignItems: 'center',
     gap: 15
   },
   productWrapper: {
     width: 100,
     height: 140,
-    justifyContent: 'flex-end', // Ürünü rafa oturt
+    justifyContent: 'flex-end',
   }
 });

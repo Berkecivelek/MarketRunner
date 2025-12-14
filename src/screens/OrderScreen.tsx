@@ -1,11 +1,13 @@
-import React from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import { getLevelById } from '../data/levels';
 import { OrderList } from '../components/OrderList';
+import { TutorialOverlay } from '../components/TutorialOverlay';
 import { useGame } from '../state/GameContext';
+import { getTutorialStepsForScreen, getNextTutorialStep, type TutorialStepId } from '../data/tutorialSteps';
 import type { RootStackParamList } from '../navigation';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Order'>;
@@ -14,7 +16,44 @@ type Props = NativeStackScreenProps<RootStackParamList, 'Order'>;
 export const OrderScreen: React.FC<Props> = ({ route, navigation }) => {
   const { levelId } = route.params;
   const level = getLevelById(levelId);
-  const { startLevel } = useGame();
+  const { startLevel, shouldShowTutorial } = useGame();
+  
+  // Tutorial state
+  const [currentTutorialStep, setCurrentTutorialStep] = useState<TutorialStepId | null>(null);
+  const tutorialSteps = useMemo(() => getTutorialStepsForScreen('Order'), []);
+  const showTutorial = useMemo(() => shouldShowTutorial(levelId), [levelId, shouldShowTutorial]);
+  
+  useEffect(() => {
+    // Level 1 ve tutorial gösterilmeli ise ilk adımı göster
+    console.log('OrderScreen useEffect:', { levelId, showTutorial, tutorialStepsLength: tutorialSteps.length });
+    if (showTutorial && tutorialSteps.length > 0) {
+      console.log('Setting tutorial step to:', tutorialSteps[0].id);
+      setCurrentTutorialStep(tutorialSteps[0].id);
+    } else {
+      console.log('Not showing tutorial');
+      setCurrentTutorialStep(null);
+    }
+  }, [levelId, showTutorial, tutorialSteps]);
+  
+  const currentStep = currentTutorialStep 
+    ? tutorialSteps.find(step => step.id === currentTutorialStep)
+    : null;
+  
+  const handleTutorialNext = () => {
+    if (!currentTutorialStep) return;
+    
+    const nextStep = getNextTutorialStep(currentTutorialStep);
+    if (nextStep && nextStep.screen === 'Order') {
+      setCurrentTutorialStep(nextStep.id);
+    } else {
+      // Order ekranındaki tutorial bitti, kapat
+      setCurrentTutorialStep(null);
+    }
+  };
+  
+  const handleTutorialSkip = () => {
+    setCurrentTutorialStep(null);
+  };
 
   if (!level) {
     return (
@@ -39,34 +78,51 @@ export const OrderScreen: React.FC<Props> = ({ route, navigation }) => {
           <Text style={styles.backText}>← Geri</Text>
         </TouchableOpacity>
       </View>
-      <ScrollView contentContainerStyle={styles.container}>
-        <View style={styles.card}>
-          <Text style={styles.customerLabel}>
-            {level.customerType === 'online' ? 'Online Sipariş' : 'Walk-in Müşteri'}
-          </Text>
-          <Text style={styles.levelTitle}>Level {level.levelId}</Text>
-          <Text style={styles.description}>
-            Siparişi hazırlamak için gerekli ürünleri topla ve kasada paketle.
-          </Text>
+    <ScrollView contentContainerStyle={styles.container}>
+      <View style={styles.card}>
+        <Text style={styles.customerLabel}>
+          {level.customerType === 'online' ? 'Online Sipariş' : 'Walk-in Müşteri'}
+        </Text>
+        <Text style={styles.levelTitle}>Level {level.levelId}</Text>
+        <Text style={styles.description}>
+          Siparişi hazırlamak için gerekli ürünleri topla ve kasada paketle.
+        </Text>
 
-          <OrderList items={level.orderItems} showProgress={false} title="Sipariş Listesi" />
+        <OrderList 
+          items={level.orderItems} 
+          showProgress={false} 
+          title="Sipariş Listesi"
+          testID="orderList"
+        />
 
-          {level.tutorialTips ? (
-            <View style={styles.tutorialBox}>
-              <Text style={styles.tutorialTitle}>İpuçları</Text>
-              {level.tutorialTips.map((tip, index) => (
-                <Text key={tip} style={styles.tutorialText}>
-                  {index + 1}. {tip}
-                </Text>
-              ))}
-            </View>
-          ) : null}
+        {level.tutorialTips ? (
+          <View style={styles.tutorialBox}>
+            <Text style={styles.tutorialTitle}>İpuçları</Text>
+            {level.tutorialTips.map((tip, index) => (
+              <Text key={tip} style={styles.tutorialText}>
+                {index + 1}. {tip}
+              </Text>
+            ))}
+          </View>
+        ) : null}
 
-          <TouchableOpacity style={styles.startButton} onPress={handleStart}>
-            <Text style={styles.startText}>Başla</Text>
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
+        <TouchableOpacity 
+          style={styles.startButton} 
+          onPress={handleStart}
+          testID="startButton"
+        >
+          <Text style={styles.startText}>Başla</Text>
+        </TouchableOpacity>
+      </View>
+    </ScrollView>
+    
+    {/* Tutorial Overlay */}
+    <TutorialOverlay
+      visible={showTutorial && currentStep !== null}
+      step={currentStep}
+      onNext={handleTutorialNext}
+      onSkip={handleTutorialSkip}
+    />
     </SafeAreaView>
   );
 };
