@@ -18,6 +18,7 @@ interface GameState {
     music: boolean;
     sfx: boolean;
   };
+  language: 'TR' | 'EN';
 }
 
 interface LevelCompletionPayload {
@@ -42,6 +43,7 @@ interface GameContextValue extends GameState {
   getNextXpThreshold: () => number;
   toggleMusic: (enabled: boolean) => void;
   toggleSfx: (enabled: boolean) => void;
+  setLanguage: (lang: 'TR' | 'EN') => void;
   resetProgress: () => void;
   completeTutorial: () => void;
   shouldShowTutorial: (levelId: number) => boolean;
@@ -73,7 +75,8 @@ const INITIAL_STATE: GameState = {
   audioSettings: {
     music: true,
     sfx: true
-  }
+  },
+  language: 'TR'
 };
 
 const GameContext = createContext<GameContextValue | undefined>(undefined);
@@ -95,7 +98,8 @@ export const GameProvider: React.FC<React.PropsWithChildren> = ({ children }) =>
              isLoading: false,
              tutorialCompleted: parsed.tutorialCompleted ?? false, // ?? kullanarak null/undefined kontrolü
              completedLevels: parsed.completedLevels || [], // completedLevels array'i kontrol et
-             audioSettings: parsed.audioSettings || { music: true, sfx: true }
+             audioSettings: parsed.audioSettings || { music: true, sfx: true },
+             language: parsed.language || 'TR'
           };
           console.log('GameContext loadedState:', {
             tutorialCompleted: loadedState.tutorialCompleted,
@@ -104,6 +108,9 @@ export const GameProvider: React.FC<React.PropsWithChildren> = ({ children }) =>
             shouldShow: !loadedState.tutorialCompleted && !loadedState.completedLevels.includes(1)
           });
           setState(loadedState);
+          // i18n'yi güncelle
+          const { setLanguage: setI18nLanguage } = require('../utils/i18n');
+          setI18nLanguage(loadedState.language);
           // SoundManager çağrısını try-catch ile koru
           try {
             soundManager.setAudioSettings(loadedState.audioSettings.music, loadedState.audioSettings.sfx);
@@ -112,6 +119,9 @@ export const GameProvider: React.FC<React.PropsWithChildren> = ({ children }) =>
           }
         } else {
           setState((prev) => ({ ...prev, isLoading: false }));
+          // i18n'yi varsayılan dil'e ayarla
+          const { setLanguage: setI18nLanguage } = require('../utils/i18n');
+          setI18nLanguage('TR');
           // SoundManager çağrısını try-catch ile koru
           try {
             soundManager.setAudioSettings(true, true);
@@ -254,6 +264,13 @@ export const GameProvider: React.FC<React.PropsWithChildren> = ({ children }) =>
     });
   };
 
+  const setLanguage = (lang: 'TR' | 'EN') => {
+    setState(prev => ({ ...prev, language: lang }));
+    // i18n'yi güncelle
+    const { setLanguage: setI18nLanguage } = require('../utils/i18n');
+    setI18nLanguage(lang);
+  };
+
   const resetProgress = () => {
       setState({
           ...INITIAL_STATE,
@@ -306,6 +323,7 @@ export const GameProvider: React.FC<React.PropsWithChildren> = ({ children }) =>
       getNextXpThreshold: () => getXpThresholdForLevel(state.marketLevel),
       toggleMusic,
       toggleSfx,
+      setLanguage,
       resetProgress,
       completeTutorial,
       shouldShowTutorial
@@ -358,9 +376,11 @@ export const useGame = () => {
       getNextXpThreshold: () => 100,
       toggleMusic: () => {},
       toggleSfx: () => {},
+      setLanguage: () => {},
       resetProgress: () => {},
       completeTutorial: () => {},
       shouldShowTutorial: () => false,
+      language: 'TR',
     } as GameContextValue;
   }
   return context;

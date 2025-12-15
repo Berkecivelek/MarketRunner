@@ -8,19 +8,20 @@ import * as ScreenOrientation from 'expo-screen-orientation';
 import { XPBar } from '../components/XPBar';
 import { useGame } from '../state/GameContext';
 import type { RootStackParamList } from '../navigation';
+import { getTranslation } from '../utils/i18n';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'MainMenu'>;
-
-const MENU_BUTTONS = [
-  { label: 'Play', target: 'LevelSelect' as const },
-  { label: 'My Market', target: 'MarketUpgrade' as const },
-  { label: 'Settings', target: 'Settings' as const }
-];
 
 // Ana menü: navigasyonu ve temel ilerlemeyi gösterir.
 export const MainMenuScreen: React.FC<Props> = ({ navigation }) => {
   const insets = useSafeAreaInsets();
   const { coins, xp, marketLevel } = useGame();
+  
+  const MENU_BUTTONS = [
+    { label: getTranslation('mainMenu', 'play'), target: 'LevelSelect' as const },
+    { label: getTranslation('mainMenu', 'market'), target: 'MarketUpgrade' as const },
+    { label: getTranslation('mainMenu', 'settings'), target: 'Settings' as const }
+  ];
 
   useFocusEffect(
     useCallback(() => {
@@ -39,23 +40,23 @@ export const MainMenuScreen: React.FC<Props> = ({ navigation }) => {
   return (
     <View style={[styles.container, { paddingTop: insets.top + 32, paddingBottom: insets.bottom + 24 }]}>
       <View style={styles.header}>
-        <Text style={styles.title}>Market Runner</Text>
-        <Text style={styles.subtitle}>Mahalle marketini yönet, siparişleri yetiştir!</Text>
+        <Text style={styles.title}>{getTranslation('mainMenu', 'title')}</Text>
+        <Text style={styles.subtitle}>{getTranslation('mainMenu', 'subtitle')}</Text>
       </View>
 
       <XPBar />
 
       <View style={styles.stats}>
         <View style={styles.statCard}>
-          <Text style={styles.statLabel}>Coins</Text>
+          <Text style={styles.statLabel}>{getTranslation('game', 'coins')}</Text>
           <Text style={styles.statValue}>{coins}</Text>
         </View>
         <View style={styles.statCard}>
-          <Text style={styles.statLabel}>XP</Text>
+          <Text style={styles.statLabel}>{getTranslation('game', 'xp')}</Text>
           <Text style={styles.statValue}>{xp}</Text>
         </View>
         <View style={styles.statCard}>
-          <Text style={styles.statLabel}>Market Lv.</Text>
+          <Text style={styles.statLabel}>{getTranslation('game', 'marketLevel')}</Text>
           <Text style={styles.statValue}>{marketLevel}</Text>
         </View>
       </View>

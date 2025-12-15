@@ -49,8 +49,6 @@
     <string>Bu uygulama kamera erişimi gerektirmez.</string>
     <key>NSPhotoLibraryUsageDescription</key>
     <string>Bu uygulama fotoğraf kütüphanesi erişimi gerektirmez.</string>
-    <key>NSUserTrackingUsageDescription</key>
-    <string>Bu uygulama kullanıcı takibi yapmaz.</string>
     <key>UILaunchStoryboardName</key>
     <string>SplashScreen</string>
     <key>UIRequiredDeviceCapabilities</key>

@@ -7,19 +7,24 @@ import * as ScreenOrientation from 'expo-screen-orientation';
 
 import type { RootStackParamList } from '../navigation';
 import { useGame } from '../state/GameContext';
+import { getTranslation, setLanguage as setI18nLanguage } from '../utils/i18n';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Settings'>;
 
 export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
   const insets = useSafeAreaInsets();
-  const { resetProgress, audioSettings, toggleMusic, toggleSfx } = useGame();
+  const { resetProgress, audioSettings, toggleMusic, toggleSfx, language, setLanguage } = useGame();
 
   // Local state for UI not yet in global context
   const [childMode, setChildMode] = useState(true);
   const [showJoystick, setShowJoystick] = useState(false);
   const [largeText, setLargeText] = useState(false);
   const [highContrast, setHighContrast] = useState(false);
-  const [language, setLanguage] = useState<'TR' | 'EN'>('TR');
+
+  const handleLanguageChange = (lang: 'TR' | 'EN') => {
+    setLanguage(lang);
+    setI18nLanguage(lang);
+  };
 
   useFocusEffect(
     useCallback(() => {
@@ -37,16 +42,16 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
 
   const handleReset = () => {
     Alert.alert(
-      'İlerlemeyi Sıfırla',
-      'Tüm oyun ilerlemesi ve puanlar silinecek. Emin misin?',
+      getTranslation('settings', 'resetProgress'),
+      getTranslation('settings', 'resetConfirm'),
       [
-        { text: 'Vazgeç', style: 'cancel' },
+        { text: getTranslation('settings', 'cancel'), style: 'cancel' },
         { 
-          text: 'Sıfırla', 
+          text: getTranslation('settings', 'reset'), 
           style: 'destructive', 
           onPress: () => {
             resetProgress();
-            Alert.alert('Başarılı', 'İlerleme sıfırlandı.');
+            Alert.alert(getTranslation('settings', 'resetSuccess'), getTranslation('settings', 'resetSuccess'));
           }
         }
       ]
@@ -77,65 +82,65 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
       ]}
     >
       <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-        <Text style={styles.backLink}>← Ana Menü</Text>
+        <Text style={styles.backLink}>{getTranslation('settings', 'backToMenu')}</Text>
       </TouchableOpacity>
 
-      <Text style={styles.headerTitle}>Ayarlar</Text>
+      <Text style={styles.headerTitle}>{getTranslation('settings', 'title')}</Text>
 
       {/* SES */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>SES & MÜZİK 🎵</Text>
+        <Text style={styles.sectionTitle}>{getTranslation('settings', 'audio')}</Text>
         <View style={styles.card}>
-          <SettingRow label="Müzik" value={audioSettings.music} onValueChange={toggleMusic} />
+          <SettingRow label={getTranslation('settings', 'music')} value={audioSettings.music} onValueChange={toggleMusic} />
           <View style={styles.divider} />
-          <SettingRow label="Ses Efektleri" value={audioSettings.sfx} onValueChange={toggleSfx} />
+          <SettingRow label={getTranslation('settings', 'sfx')} value={audioSettings.sfx} onValueChange={toggleSfx} />
         </View>
       </View>
 
       {/* OYUN & ÇOCUK */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>OYUN & GÜVENLİK 🛡️</Text>
+        <Text style={styles.sectionTitle}>{getTranslation('settings', 'gameSecurity')}</Text>
         <View style={styles.card}>
           <SettingRow 
-            label="Çocuk Modu" 
+            label={getTranslation('settings', 'childMode')} 
             value={childMode} 
             onValueChange={setChildMode} 
-            description="Satın alımları ve dış bağlantıları engeller."
+            description={getTranslation('settings', 'childModeDesc')}
           />
           <View style={styles.divider} />
           <SettingRow 
-            label="Joystick Göster" 
+            label={getTranslation('settings', 'showJoystick')} 
             value={showJoystick} 
             onValueChange={setShowJoystick}
-            description="Dokunmatik kontroller yerine sanal joystick kullan." 
+            description={getTranslation('settings', 'showJoystickDesc')} 
           />
         </View>
       </View>
 
       {/* ERİŞİLEBİLİRLİK */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>ERİŞİLEBİLİRLİK ♿</Text>
+        <Text style={styles.sectionTitle}>{getTranslation('settings', 'accessibility')}</Text>
         <View style={styles.card}>
-          <SettingRow label="Büyük Metin" value={largeText} onValueChange={setLargeText} />
+          <SettingRow label={getTranslation('settings', 'largeText')} value={largeText} onValueChange={setLargeText} />
           <View style={styles.divider} />
-          <SettingRow label="Yüksek Kontrast" value={highContrast} onValueChange={setHighContrast} />
+          <SettingRow label={getTranslation('settings', 'highContrast')} value={highContrast} onValueChange={setHighContrast} />
         </View>
       </View>
 
       {/* DİL */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>DİL / LANGUAGE 🌍</Text>
+        <Text style={styles.sectionTitle}>{getTranslation('settings', 'language')}</Text>
         <View style={styles.card}>
           <View style={styles.langRow}>
             <TouchableOpacity 
               style={[styles.langButton, language === 'TR' && styles.langButtonActive]} 
-              onPress={() => setLanguage('TR')}
+              onPress={() => handleLanguageChange('TR')}
             >
               <Text style={[styles.langText, language === 'TR' && styles.langTextActive]}>Türkçe 🇹🇷</Text>
             </TouchableOpacity>
             <TouchableOpacity 
               style={[styles.langButton, language === 'EN' && styles.langButtonActive]} 
-              onPress={() => setLanguage('EN')}
+              onPress={() => handleLanguageChange('EN')}
             >
               <Text style={[styles.langText, language === 'EN' && styles.langTextActive]}>English 🇬🇧</Text>
             </TouchableOpacity>
@@ -145,12 +150,12 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
 
       {/* VERİ */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>HESAP & VERİ 💾</Text>
+        <Text style={styles.sectionTitle}>{getTranslation('settings', 'account')}</Text>
         <View style={styles.card}>
           <TouchableOpacity style={styles.resetButton} onPress={handleReset}>
-            <Text style={styles.resetText}>İlerlemeyi Sıfırla</Text>
+            <Text style={styles.resetText}>{getTranslation('settings', 'resetProgress')}</Text>
           </TouchableOpacity>
-          <Text style={styles.versionText}>Versiyon 1.0.4 (Beta)</Text>
+          <Text style={styles.versionText}>{getTranslation('settings', 'version')}</Text>
         </View>
       </View>
 

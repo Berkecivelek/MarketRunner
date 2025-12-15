@@ -205,8 +205,25 @@ class SoundManager {
         Speech.stop();
       }
       
-      // Ürün adını İngilizce'ye çevir
-      const englishName = getProductEnglishName(productId);
+      // Dil'e göre translate özelliği:
+      // TR seçildiyse: İngilizce konuş (translate)
+      // EN seçildiyse: Türkçe konuş (translate)
+      const { getLanguage } = require('./i18n');
+      const currentLanguage = getLanguage();
+      const { getProductName } = require('../data/legacyProducts');
+      
+      let textToSpeak: string;
+      let speechLanguage: string;
+      
+      if (currentLanguage === 'TR') {
+        // Türkçe seçildiyse İngilizce konuş (translate)
+        textToSpeak = getProductEnglishName(productId);
+        speechLanguage = 'en-US';
+      } else {
+        // İngilizce seçildiyse Türkçe konuş (translate)
+        textToSpeak = getProductName(productId);
+        speechLanguage = 'tr-TR';
+      }
       
       // Konuşma başladı olarak işaretle
       this.isSpeaking = true;
@@ -214,8 +231,8 @@ class SoundManager {
       // Çocuksu, çizgi film karakteri gibi bir ses için ayarlar
       // iOS'ta daha çocuksu sesler için pitch'i yükseltiyoruz
       if (Speech && Speech.speak) {
-        Speech.speak(englishName, {
-          language: 'en-US',
+        Speech.speak(textToSpeak, {
+          language: speechLanguage,
           pitch: 1.4, // Daha yüksek pitch = daha çocuksu, çizgi film karakteri gibi ses
           rate: 0.8, // Biraz daha yavaş = daha anlaşılır ve çocuksu
           volume: 1.0,

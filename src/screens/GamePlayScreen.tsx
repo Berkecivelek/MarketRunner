@@ -19,6 +19,7 @@ import { getTutorialStepsForScreen, getTutorialStep, type TutorialStepId } from 
 import type { RootStackParamList } from '../navigation';
 import type { CollectedItem } from '../types/common';
 import type { OrderItem } from '../types/level';
+import { getTranslation } from '../utils/i18n';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'GamePlay'>;
 
@@ -161,7 +162,7 @@ export const GamePlayScreen: React.FC<Props> = ({ navigation, route }) => {
 
   const handleWrongSelection = useCallback((key: string) => {
     setWrongKey(key);
-    setFeedback({ message: 'Bu ürün siparişte yok!', tone: 'error' });
+    setFeedback({ message: getTranslation('game', 'wrongItem'), tone: 'error' });
     setTimeout(() => setWrongKey(null), 600);
   }, []);
 
@@ -169,7 +170,7 @@ export const GamePlayScreen: React.FC<Props> = ({ navigation, route }) => {
     (key: string) => {
       if (!level || isTransitioning) return;
       if (phase !== 'collect') {
-        setFeedback({ message: 'Önce "Siparişi Hazırla" butonuna dokun.', tone: 'error' });
+        setFeedback({ message: getTranslation('game', 'prepareOrderFirst'), tone: 'error' });
         return;
       }
       
@@ -226,9 +227,9 @@ export const GamePlayScreen: React.FC<Props> = ({ navigation, route }) => {
           }
         ]);
         
-        // Seslendirme: productId için İngilizce çeviri
+        // Seslendirme: productId için translate (dil'e göre)
         soundManager.speakProductName(productId);
-        setFeedback({ message: 'Sepete eklendi!', tone: 'success' });
+        setFeedback({ message: getTranslation('game', 'addToCart'), tone: 'success' });
         setWrongKey(null);
         
         setTimeout(() => {
@@ -363,9 +364,9 @@ export const GamePlayScreen: React.FC<Props> = ({ navigation, route }) => {
 
     // 2. If in collect phase, provide feedback instead of auto-collecting
     if (phase === 'collect') {
-      setFeedback({ message: 'Şimdi aşağıdaki raftan ürünü bulup sepete ekle!', tone: 'success' });
+      setFeedback({ message: getTranslation('game', 'addToCart'), tone: 'success' });
     } else {
-       setFeedback({ message: 'Önce "Siparişi Hazırla" butonuna dokun.', tone: 'error' });
+       setFeedback({ message: getTranslation('game', 'prepareOrderFirst'), tone: 'error' });
     }
   }, [level, phase, shelvesToShow]); // Removed handleSelect dependency
 
@@ -539,20 +540,19 @@ export const GamePlayScreen: React.FC<Props> = ({ navigation, route }) => {
           <OrderList 
             items={level.orderItems} 
             collectedMap={collectedMap} 
-            title="Sipariş" 
+            title={getTranslation('game', 'order')} 
             onItemPress={handleOrderListPress}
           />
         </ScrollView>
         <View style={styles.instructionsBox}>
-          <Text style={styles.instructionsTitle}>Raf İpucu</Text>
+          <Text style={styles.instructionsTitle}>{getTranslation('game', 'shelfHint')}</Text>
           <Text style={styles.instructionsText}>
-            Raf sekmelerini yatay kaydırarak markette gez, kartlara dokunarak ürünleri sepete ekle.
-            Yanlış ürün seçersen uyarı alırsın.
+            {getTranslation('game', 'shelfHintText')}
           </Text>
         </View>
         {phase === 'overview' ? (
           <TouchableOpacity style={styles.primaryButton} onPress={handleStartCollect}>
-            <Text style={styles.primaryButtonText}>Siparişi Hazırla</Text>
+            <Text style={styles.primaryButtonText}>{getTranslation('game', 'prepareOrder')}</Text>
           </TouchableOpacity>
         ) : null}
       </View>
@@ -599,7 +599,7 @@ export const GamePlayScreen: React.FC<Props> = ({ navigation, route }) => {
             disabled={isTransitioning}
             testID="completeButton"
           >
-            <Text style={styles.primaryButtonText}>Siparişi Tamamla</Text>
+            <Text style={styles.primaryButtonText}>{getTranslation('game', 'completeOrder')}</Text>
           </TouchableOpacity>
         ) : null}
         {feedback ? (

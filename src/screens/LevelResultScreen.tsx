@@ -9,6 +9,7 @@ import { XPBar } from '../components/XPBar';
 import { TutorialOverlay } from '../components/TutorialOverlay';
 import { useGame } from '../state/GameContext';
 import { getTutorialStep, type TutorialStepId } from '../data/tutorialSteps';
+import { getTranslation } from '../utils/i18n';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'LevelResult'>;
 
@@ -94,30 +95,30 @@ export const LevelResultScreen: React.FC<Props> = ({ route, navigation }) => {
   return (
     <View style={styles.container}>
       <View style={styles.card}>
-        <Text style={styles.title}>{success ? 'Tebrikler!' : 'Level Başarısız'}</Text>
+        <Text style={styles.title}>{success ? getTranslation('levelResult', 'success') : getTranslation('levelResult', 'levelFailed')}</Text>
         <Text style={styles.subtitle}>
-          Level {levelId}{' '}
+          {getTranslation('game', 'level')} {levelId}{' '}
           {success
-            ? 'siparişi tamamlandı.'
+            ? getTranslation('levelResult', 'levelCompleted')
             : failureReason ?? 'Bu deneme olmadı, tekrar deneyebilirsin.'}
         </Text>
 
         <View style={styles.rewardBox}>
           <View style={styles.rewardItem}>
-            <Text style={styles.rewardLabel}>Coins</Text>
+            <Text style={styles.rewardLabel}>{getTranslation('game', 'coins')}</Text>
             <Text style={styles.rewardValue}>{success ? coinsEarned : 0}</Text>
-            <Text style={styles.rewardTotal}>Toplam: {totalCoins}</Text>
+            <Text style={styles.rewardTotal}>{getTranslation('levelResult', 'total')}: {totalCoins}</Text>
           </View>
           <View style={styles.rewardItem}>
-            <Text style={styles.rewardLabel}>XP</Text>
+            <Text style={styles.rewardLabel}>{getTranslation('game', 'xp')}</Text>
             <Text style={styles.rewardValue}>{success ? xpEarned : 0}</Text>
-            <Text style={styles.rewardTotal}>Toplam: {totalXp}</Text>
+            <Text style={styles.rewardTotal}>{getTranslation('levelResult', 'total')}: {totalXp}</Text>
           </View>
           <View style={styles.rewardItem}>
-            <Text style={styles.rewardLabel}>Market Lv.</Text>
+            <Text style={styles.rewardLabel}>{getTranslation('game', 'marketLevel')}</Text>
             <Text style={styles.rewardValue}>{marketLevel}</Text>
             <Text style={styles.rewardTotal}>
-              Açık level: {contextUnlocked.length}
+              {getTranslation('levelResult', 'openLevels')}: {contextUnlocked.length}
             </Text>
           </View>
         </View>
@@ -128,9 +129,9 @@ export const LevelResultScreen: React.FC<Props> = ({ route, navigation }) => {
 
         {leveledUp ? (
           <View style={styles.levelUpBanner}>
-            <Text style={styles.levelUpTitle}>Market Level Up!</Text>
+            <Text style={styles.levelUpTitle}>{getTranslation('levelResult', 'levelUp')}</Text>
             <Text style={styles.levelUpText}>
-              Daha geniş raflar ve yeni dekorlar kullanıma hazır görünüyor.
+              {getTranslation('levelResult', 'levelUpText')}
             </Text>
           </View>
         ) : null}
@@ -139,28 +140,28 @@ export const LevelResultScreen: React.FC<Props> = ({ route, navigation }) => {
           {/* Sol Buton: Her zaman 'Tekrar Oyna' veya 'Level Seç' (Başarısızsa) */}
           {success ? (
              <TouchableOpacity style={styles.secondaryButton} onPress={handleRetry}>
-               <Text style={styles.secondaryText}>Tekrar Oyna</Text>
+               <Text style={styles.secondaryText}>{getTranslation('levelResult', 'retryLevel')}</Text>
              </TouchableOpacity>
           ) : (
              <TouchableOpacity style={styles.secondaryButton} onPress={handleLevelSelect}>
-               <Text style={styles.secondaryText}>Level Seç</Text>
+               <Text style={styles.secondaryText}>{getTranslation('levelResult', 'selectLevel')}</Text>
              </TouchableOpacity>
           )}
 
           {/* Sağ Buton: Başarılıysa 'Sonraki Level', Başarısızsa 'Tekrar Oyna' */}
           {success ? (
             <TouchableOpacity style={styles.primaryButton} onPress={handleNext}>
-              <Text style={styles.primaryText}>Sonraki Level ({nextLevelId})</Text>
+              <Text style={styles.primaryText}>{getTranslation('levelResult', 'nextLevel')} ({nextLevelId})</Text>
             </TouchableOpacity>
           ) : (
             <TouchableOpacity style={styles.primaryButton} onPress={handleRetry}>
-              <Text style={styles.primaryText}>Tekrar Oyna</Text>
+              <Text style={styles.primaryText}>{getTranslation('levelResult', 'retryLevel')}</Text>
             </TouchableOpacity>
           )}
         </View>
 
         <TouchableOpacity style={styles.exitButton} onPress={handleMainMenu}>
-           <Text style={styles.exitButtonText}>Çıkış</Text>
+           <Text style={styles.exitButtonText}>{getTranslation('levelResult', 'exit')}</Text>
         </TouchableOpacity>
 
       </View>

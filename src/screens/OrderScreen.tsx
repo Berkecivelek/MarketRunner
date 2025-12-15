@@ -9,6 +9,7 @@ import { TutorialOverlay } from '../components/TutorialOverlay';
 import { useGame } from '../state/GameContext';
 import { getTutorialStepsForScreen, getNextTutorialStep, type TutorialStepId } from '../data/tutorialSteps';
 import type { RootStackParamList } from '../navigation';
+import { getTranslation } from '../utils/i18n';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Order'>;
 
@@ -75,29 +76,29 @@ export const OrderScreen: React.FC<Props> = ({ route, navigation }) => {
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Text style={styles.backText}>← Geri</Text>
+          <Text style={styles.backText}>{getTranslation('order', 'back')}</Text>
         </TouchableOpacity>
       </View>
     <ScrollView contentContainerStyle={styles.container}>
       <View style={styles.card}>
         <Text style={styles.customerLabel}>
-          {level.customerType === 'online' ? 'Online Sipariş' : 'Walk-in Müşteri'}
+          {level.customerType === 'online' ? getTranslation('order', 'onlineOrder') : getTranslation('order', 'walkInCustomer')}
         </Text>
         <Text style={styles.levelTitle}>Level {level.levelId}</Text>
         <Text style={styles.description}>
-          Siparişi hazırlamak için gerekli ürünleri topla ve kasada paketle.
+          {getTranslation('order', 'description')}
         </Text>
 
         <OrderList 
           items={level.orderItems} 
           showProgress={false} 
-          title="Sipariş Listesi"
+          title={getTranslation('order', 'orderList')}
           testID="orderList"
         />
 
         {level.tutorialTips ? (
           <View style={styles.tutorialBox}>
-            <Text style={styles.tutorialTitle}>İpuçları</Text>
+            <Text style={styles.tutorialTitle}>{getTranslation('order', 'tips')}</Text>
             {level.tutorialTips.map((tip, index) => (
               <Text key={tip} style={styles.tutorialText}>
                 {index + 1}. {tip}
@@ -111,7 +112,7 @@ export const OrderScreen: React.FC<Props> = ({ route, navigation }) => {
           onPress={handleStart}
           testID="startButton"
         >
-          <Text style={styles.startText}>Başla</Text>
+          <Text style={styles.startText}>{getTranslation('order', 'start')}</Text>
         </TouchableOpacity>
       </View>
     </ScrollView>

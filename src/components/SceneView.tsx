@@ -345,13 +345,21 @@ export const SceneView: React.FC<SceneViewProps> = ({ shelves, onProductSelect, 
                              const key = `${item.productId}__${item.brandId || 'default'}`;
                              const collected = collectedMap[key] || 0;
                              const isDone = collected >= item.quantity;
+                             const productName = getProductName(item.productId);
                              return (
                                  <View key={idx} style={[styles.orderItem, isDone && styles.orderItemDone]}>
-                                     <View style={{marginRight: 5}}>
-                                        <CartoonProduct id={item.productId} scale={0.4} />
+                                     <View style={styles.productContainer}>
+                                        <View style={styles.productImageWrapper}>
+                                            <CartoonProduct id={item.productId} scale={0.4} />
+                                        </View>
+                                        <Text style={[styles.productNameText, isDone && styles.textDone]} numberOfLines={1}>
+                                            {productName}
+                                        </Text>
                                      </View>
-                                     <Text style={[styles.orderText, isDone && styles.textDone]}>{collected}/{item.quantity}</Text>
-                                     {isDone && <Text>✅</Text>}
+                                     <View style={styles.quantityContainer}>
+                                        <Text style={[styles.orderText, isDone && styles.textDone]}>{collected}/{item.quantity}</Text>
+                                        {isDone && <Text style={styles.checkmark}>✅</Text>}
+                                     </View>
                                  </View>
                              );
                          })}
@@ -517,12 +525,17 @@ const styles = StyleSheet.create({
     iconButton: { width: 50, height: 50, borderRadius: 25, backgroundColor: 'rgba(0,0,0,0.5)', alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: '#FFF' },
     iconText: { fontSize: 24 },
     
-    orderListOverlay: { position: 'absolute', top: 80, right: 80, backgroundColor: 'rgba(0,0,0,0.9)', padding: 15, borderRadius: 10, borderWidth: 2, borderColor: '#FFCA28', maxHeight: 250 },
+    orderListOverlay: { position: 'absolute', top: 80, right: 80, backgroundColor: 'rgba(0,0,0,0.9)', padding: 15, borderRadius: 10, borderWidth: 2, borderColor: '#FFCA28', maxHeight: 250, minWidth: 200 },
     orderTitle: { color: '#FFCA28', fontWeight: 'bold', marginBottom: 10 },
-    orderItem: { flexDirection: 'row', alignItems: 'center', marginBottom: 5 },
+    orderItem: { flexDirection: 'row', alignItems: 'center', marginBottom: 8, justifyContent: 'space-between' },
     orderItemDone: { opacity: 0.5 },
-    orderText: { color: '#FFF', marginLeft: 15 },
-    textDone: { textDecorationLine: 'line-through' },
+    productContainer: { flexDirection: 'column', alignItems: 'center', marginRight: 10, flex: 1 },
+    productImageWrapper: { marginBottom: 4 },
+    productNameText: { color: '#FFF', fontSize: 11, fontWeight: '600', textAlign: 'center', maxWidth: 80 },
+    quantityContainer: { flexDirection: 'row', alignItems: 'center', gap: 5 },
+    orderText: { color: '#FFF', fontSize: 12, fontWeight: '700' },
+    checkmark: { fontSize: 14 },
+    textDone: { textDecorationLine: 'line-through', opacity: 0.6 },
     
     settingsModal: { position: 'absolute', top: 80, right: 20, width: 200, backgroundColor: '#FFF', borderRadius: 10, padding: 15, elevation: 5, zIndex: 3000 },
     settingsTitle: { fontSize: 16, fontWeight: 'bold', color: '#333', marginBottom: 15, textAlign: 'center' },
